@@ -128,9 +128,9 @@ function play(message) {
 }
 
 function vol(message, args) {
-    //no parameter
+    //no parameter --> reset volume to 5 (standard)
     if (args.length == 0) {
-        util.logUserError("Found no volume integer in 'vol'-statement", "music: vol", message.member, "None");
+        args.push("5");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
@@ -147,6 +147,11 @@ function vol(message, args) {
     if (!serverQueue) {
         util.logUserError("There was no music playing while user tried to change volume", "music: vol", message.member, "Parameter: " + args[0]);
         return message.channel.send("Nothing is currently being played!");
+    }
+    //range of volume
+    if (0 >= args[0]) {
+        util.logUserError("User tried to set negative volume", "music: vol", message.member, "Parameter: " + args[0]);
+        return message.channel.send("There can't be a negative volume!");
     }
     serverQueue.volume = args[0];
     try {
@@ -170,20 +175,35 @@ function count(message) {
 }
 
 function clear(message) {
+    //log every try in console
+    util.logUserError("Called 'clear' function.", "music: clear: log console", message.member, "INFO only");
+
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
         util.logUserError("No queue for user to delete", "music: clear", message.member, "None");
         return message.channel.send("Queue is already empty!");
     }
-    message.channel.send(`Deleted queue of ${serverQueue.songs.length} songs!`);
+    const num = serverQueue.songs.length;
     serverQueue.songs = [];
+    //not in a voice channel --> delete serverQueue and return
+    if (!message.guild.voice) {
+        queues.delete(message.guild.id);
+        return message.channel.send(`Deleted queue of ${num} songs!`);
+    }
+    //in a voice channel --> check if playing, if not, resume (so the end event will clear everything up)
     try {
+        if (!serverQueue.playing) {
+            serverQueue.playing = true;
+            serverQueue.connection.dispatcher.resume();
+        }
         serverQueue.connection.dispatcher.end();
     }
     catch (err) {
         util.logErr(err, "music: clear: end dispatcher", "None");
+        message.channel.send(`Deleted queue of ${num} songs, but could not end currently playing track!`);
     }
+    return message.channel.send(`Deleted queue of ${num} songs!`);
 }
 
 function now(message) {
@@ -193,7 +213,7 @@ function now(message) {
         util.logUserError("No server queue while user tried to display current song", "music: now", message.member, "None");
         return message.channel.send("Nothing is currently being played!");
     }
-    return message.channel.send(`Currently live: **${serverQueue.songs[0].title}** requested by ${serverQueue.songs[0].user}!`);
+    return message.channel.send(`Currently live: **${serverQueue.songs[0].title}**!`);
 }
 
 function shuffle(message) {
@@ -208,10 +228,10 @@ function shuffle(message) {
         util.logUserError("User was not connected to the correct voice channel", "music: shuffle", message.member, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to shuffle the queue!");
     }
-    //only one song left
-    if (serverQueue.songs.length == 1) {
+    //not enough songs left
+    if (serverQueue.songs.length <= 2) {
         util.logUserError("Not enough songs in queue to shuffle for user", "music: shuffle", message.member, "None");
-        return message.channel.send("There is only one song left in the queue!");
+        return message.channel.send("There are not enough songs left in the queue to shuffle!");
     }
     //shuffle
     const first = serverQueue.songs.shift();
@@ -237,6 +257,10 @@ function again(message) {
     if (message.member.voice.channel != serverQueue.voiceChannel) {
         util.logUserError("User was not connected to the correct voice channel", "music: again", message.member, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to restart the current song!");
+    }
+    //paused --> resume
+    if (!serverQueue.playing) {
+        resume(message);
     }
     //copy current track into second place
     serverQueue.songs.splice(1, 0, serverQueue.songs[0]);
@@ -284,6 +308,10 @@ function skip(message, args, looping) {
         util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.member, "Parameter: " + args[0] + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
+    //paused --> resume
+    if (!serverQueue.playing) {
+        resume(message);
+    }
     //remove skipped songs
     skipped = serverQueue.songs.splice(0, args[0]);
     //add them to the back of the array if looping is enabled
@@ -313,15 +341,14 @@ function skip(message, args, looping) {
 
 function setLooping(message, args) {
     serverQueue = queues.get(message.guild.id);
-    //no parameter
-    if (args.length == 0) {
-        util.logUserError("Missing parameter input by user", "music: setLooping", message.member, "Parameter: missing");
-        return message.channel.send("Missing parameter: type true/false!");
-    }
     //no serverQueue
     if (!serverQueue) {
         util.logUserError("No music playing while user tried to set looping status", "music: setLooping", message.member, "Parameter: " + args[0]);
         return message.channel.send("Nothing is currently being played!");
+    }
+    //no parameter --> return current looping status
+    if (args.length == 0) {
+        return message.channel.send("Looping is currently set to: **" + serverQueue.looping + "**!");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
@@ -506,7 +533,7 @@ function remove(message, args) {
             skip(message, skipArgs, false);
             return message.channel.send("Removed first song!");
         }
-        //remove other songs
+        //else: remove other songs
         removed = serverQueue.songs.splice(args[0] - 1, 1);
     }
     catch (err) {
@@ -601,6 +628,31 @@ function requested(message) {
     return message.channel.send(`**${serverQueue.songs[0].title}** was requested by ${serverQueue.songs[0].user}!`);
 }
 
+function removeDoubles(message) {
+    serverQueue = queues.get(message.guild.id)
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("User tried to remove doubles in empty queue.", "music: removeDoubles", message.member, "None");
+        return message.channel.send("Nothing is currently in the queue!");
+    }
+    try {
+        const removed = 0;
+        for (i = 0; i < serverQueue.songs.length; i++) {
+            for (j = i + 1; j < serverQueue.songs.length; j++) {
+                if (serverQueue.songs[j].url == serverQueue.songs[i].url) {
+                    serverQueue.songs.splice(j--, 1);
+                    removed++;
+                }
+            }
+        }
+    }
+    catch (err) {
+        util.logErr(err, "music: removeDoubles: for-Loops", "None");
+        return message.channel.send("Something went wrong. Already removed " + removed + " songs.");
+    }
+    return message.channel.send("Removed " + removed + " songs from the queue - they were duplicates.");
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -617,5 +669,6 @@ module.exports = {
     remove: remove,
     load: load,
     write: write,
-    requested: requested
+    requested: requested,
+    removeDoubles: removeDoubles
 }

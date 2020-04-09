@@ -5,6 +5,33 @@ const client = new Discord.Client();
 
 const music = require('./musicModule.js');
 
+function help(message) {
+    text = "";
+    text += "```fix\nHelp menu - overview\n```\n";
+    text += "```\nCurrently, there are 18 commands available:\n";
+    text += "command <arguments>        - Description                                       - Aliases\n";
+    text += "play <YT-URL>              - Add song to the queue                             - p\n";
+    text += "pause                      - Pause                                             - \n";
+    text += "resume                     - Resume after paused                               - res, continue\n";
+    text += "skip <int = 1>             - Skip multiple songs                               - \n";
+    text += "queue <page = 1 | all>     - Show the queue                                    - q\n";
+    text += "volume <int = 5>           - Change the volume                                 - v, vol\n";
+    text += "shuffle                    - Shuffle the queue                                 - random, randomize\n";
+    text += "looping [<true/false>]     - Set looping status, if no parameter shows status  - \n";
+    text += "count                      - Show size of the queue                            - c, number\n";
+    text += "now                        - Show what is live                                 - np\n";
+    text += "again                      - Play current song again                           - \n";
+    text += "who                        - Show who requested this song                      - requested\n";
+    text += "remove <int = 1>           - Remove song nr.                                   - delete, del\n";
+    text += "duplicates                 - Remove all duplicated from queue                  - removeDoubles\n";
+    text += "clear                      - Clear the entire queue - FINAL!                   - \n";
+    text += "save <name>                - Attach the queue to a file                        - write, s\n";
+    text += "load <name>                - Attach songs from a file to the queue             - l\n";
+    text += "help                       - This menu                                         - \n";
+    text += "```";
+    return message.channel.send(text);
+}
+
 client.once("ready", () => {
 
     console.log("Ready!");
@@ -42,6 +69,7 @@ client.on("message", async message => {
             music.pause(message);
             break;
         case "queue":
+        case "q":
             music.list(message, args);
             break;
         case "vol":
@@ -94,6 +122,13 @@ client.on("message", async message => {
         case "who":
         case "requested":
             music.requested(message);
+            break;
+        case "duplicates":
+        case "removeDoubles":
+            music.removeDoubles(message);
+            break;
+        case "help":
+            help(message);
             break;
         default:
             message.channel.send("Please enter a valid command!");

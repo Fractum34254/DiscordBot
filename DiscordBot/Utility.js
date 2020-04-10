@@ -55,10 +55,27 @@ function writeLineToFile(filePath, data) {
         });
 }
 
+function trimString(str, length, token) {
+    if (str.length == length) {
+        return str;
+    }
+    if (str.length < length) {
+        while (str.length < length) {
+            str += token;
+        }
+        return str;
+    }
+    while (str.length > length) {
+        str = str.slice(0, -1);
+    }
+    return str;
+}
+
 module.exports =
     {
         logErr: logErr,
         logUserError: logUserError,
         randomize: randomize,
-        logInfo: logInfo
+        logInfo: logInfo,
+        trimString: trimString
     }

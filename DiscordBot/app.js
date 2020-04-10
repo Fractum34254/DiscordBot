@@ -7,33 +7,62 @@ const music = require('./musicModule.js');
 const util = require('./Utility.js');
 
 function help(message) {
-    text = "";
-    text += "```fix\nHelp menu - overview\n```\n";
-    text += "```\nCurrently, there are 18 commands available:\n";
-    text += "[Command <arguments>]      [Description]                                      [Aliases]\n";
-    text += "play <YT-URL>              - Add song to the queue                            - add\n";
-    text += "search <query, max = 5>    - Search for a query on YouTube                    - \n";
-    text += "playlist <YT-URL>          - Add a YT-playlist to the queue                   - \n";
-    text += "pause                      - Pause                                            - p\n";
-    text += "resume                     - Resume after paused                              - res, continue\n";
-    text += "skip <int = 1>             - Skip multiple songs                              - s\n";
-    text += "queue <page = 1 | all>     - Show the queue                                   - q\n";
-    text += "volume <int = 5>           - Change the volume                                - v, vol\n";
-    text += "shuffle                    - Shuffle the queue                                - random, randomize\n";
-    text += "looping [<true/false>]     - Set looping status, if no parameter shows status - loop\n";
-    text += "count                      - Show size of the queue                           - c, number\n";
-    text += "now                        - Show what is live                                - np\n";
-    text += "again                      - Play current song again                          - replay, rp\n";
-    text += "playnow <YT-URL>           - Immediatly play a song                           - playdirect, force\n";
-    text += "who                        - Show who requested this song                     - requested\n";
-    text += "remove <int = 1>           - Remove song nr.                                  - delete, del\n";
-    text += "duplicates                 - Remove all duplicated from queue                 - removeDoubles\n";
-    text += "clear                      - Clear the entire queue - FINAL!                  - cls\n";
-    text += "save <name>                - Attach the queue to a file                       - write\n";
-    text += "load <name>                - Attach songs from a file to the queue            - l\n";
-    text += "help                       - This menu                                        - h\n";
-    text += "```";
-    return message.channel.send(text);
+    //list all commands
+    commands = [];
+    commands.push({ name: "play <YT-URL>", description: "Add song to the queue", aliases: "add" });
+    commands.push({ name: "search <query, max = 5>", description: "Search for a query on YouTube", aliases: "" });
+    commands.push({ name: "playlist <YT-URL>", description: "Add a YT-playlist to the queue", aliases: "" });
+    commands.push({ name: "pause", description: "Pause the current song", aliases: "p" });
+    commands.push({ name: "resume", description: "Resume after paused", aliases: "res, continue" });
+    commands.push({ name: "skip <int = 1>", description: "Skip multiple songs", aliases: "s" });
+    commands.push({ name: "queue <page = 1 | all>", description: "Show the queue", aliases: "q" });
+    commands.push({ name: "volume <float = 5.0>", description: "Set the volume", aliases: "vol, v" });
+    commands.push({ name: "shuffle", description: "Shuffle the queue", aliases: "random, randomize" });
+    commands.push({ name: "looping [<true/false>]", description: "Set looping status, if no parameter shows status", aliases: "loop" });
+    commands.push({ name: "count", description: "Show size of the queue", aliases: "c, number" });
+    commands.push({ name: "now", description: "Show what is currently being played", aliases: "np" });
+    commands.push({ name: "again", description: "Play current song again", aliases: "replay, rp" });
+    commands.push({ name: "playnow <YT-URL>", description: "Immediatly play a song", aliases: "playdirect, force" });
+    commands.push({ name: "who", description: "Show who requested this song", aliases: "requested" });
+    commands.push({ name: "remove <int = 1>", description: "Remove song Nr.", aliases: "delete, del" });
+    commands.push({ name: "duplicates", description: "Remove all duplicates from queue", aliases: "removeDoubles" });
+    commands.push({ name: "clear", description: "Clear the entire queue - FINAL!", aliases: "cls" });
+    commands.push({ name: "save <name>", description: "Attach the queue to a file", aliases: "write" });
+    commands.push({ name: "load <name>", description: "Attach songs from a file to the queue", aliases: "l" });
+    commands.push({ name: "help", description: "This menu", aliases: "h" });
+
+    //find longest name, description
+    longNameInd = 0;
+    longDescInd = 0;
+    for (i = 0; i < commands.length; i++) {
+        if (commands[i].name.length > commands[longNameInd].name.length) {
+            longNameInd = i;
+        }
+        if (commands[i].description.length > commands[longDescInd].description.length) {
+            longDescInd = i;
+        }
+    }
+    const nameSize = commands[longNameInd].name.length;
+    const descSize = commands[longDescInd].description.length;
+
+    //create command list
+    commandList = "```diff\n";
+    const cur = `+ Currently, there are ${commands.length} commands available +\n`;
+    commandList += cur;
+    commandList += util.trimString("Command <arguments>", nameSize + 3, " ");
+    commandList += util.trimString("Description", descSize + 3, " ");
+    commandList += "Aliases\n";
+    for (i = 0; i < commands.length; i++) {
+        commandList += util.trimString(commands[i].name, nameSize, " ");
+        commandList += " - ";
+        commandList += util.trimString(commands[i].description, descSize, " ");
+        commandList += " - ";
+        commandList += commands[i].aliases;
+        commandList += "\n";
+    }
+    commandList += "```";
+    
+    return message.channel.send(commandList);
 }
 
 client.once("ready", () => {

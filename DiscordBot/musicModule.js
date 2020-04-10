@@ -9,6 +9,8 @@ const queues = new Map();
 const util = require('./Utility.js');
 //YT-Downloader
 const ytdl = require("ytdl-core");
+//YT-search
+const ytsr = require("ytsr");
 //storage for urls from file
 const urls = new Map();
 const pathName = "playlists/";
@@ -705,6 +707,57 @@ function removeDoubles(message) {
     return message.channel.send("Removed " + removed + " songs from the queue - they were duplicates.");
 }
 
+async function search(message, args) {
+    //no arguments
+    if (args.length == 0) {
+        util.logUserError("User did not enter a search parameter", "music: search", message.member, "None");
+        return message.channel.send("You need to enter a query!");
+    }
+    //no result number
+    if (args.length == 1) {
+        args.push("5");
+    }
+    //test, if result number ist valid
+    if (isNaN(args[1])) {
+        util.logUserError("User did not enter a valid parameter", "music: search", message.member, "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        return message.channel.send("You need to enter a valid max result number!");
+    }
+    if (args[1] > 20) {
+        util.logUserError("User entered a too large number", "music: search", message.member, "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        return message.channel.send("You need to enter a max result number smaller then or equal to 20!");
+    }
+    //try searching via ytsr
+    var result;
+    try {
+        result = await ytsr(args[0], { limit: args[1] });
+    }
+    catch (err) {
+        util.logErr(err, "music: search: await ytsr", "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        return message.channel.send("Error while searching.");
+    }
+    text = "";
+    //loop trough results
+    try {
+        for (i = 0; i < result.items.length; i++) {
+            text += result.items[i].link;
+            text += " - ";
+            text += result.items[i].title;
+            text += "\n";
+        }
+    }
+    catch (err) {
+        util.logErr(err, "music: search: examine results", "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        message.channel.send("Error while examining the results. Already extracted:");
+        if (text === "");
+        {
+            return message.channel.send("Nothing extracted.");
+        }
+        return message.channel.send(text);
+    }
+    message.channel.send("**Search results:**");
+    return message.channel.send(text);
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -723,5 +776,6 @@ module.exports = {
     write: write,
     requested: requested,
     removeDoubles: removeDoubles,
-    playDirect: playDirect
+    playDirect: playDirect,
+    search: search
 }

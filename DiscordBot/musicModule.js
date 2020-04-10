@@ -144,7 +144,7 @@ function play(message) {
     message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
 }
 
-function playDirect(message, args) {
+async function playDirect(message, args) {
     serverQueue = queues.get(message.guild.id);
     //no serverQueue --> Execute
     if (!serverQueue) {

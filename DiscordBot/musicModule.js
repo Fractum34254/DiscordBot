@@ -11,9 +11,13 @@ const util = require('./Utility.js');
 const ytdl = require("ytdl-core");
 //YT-search
 const ytsr = require("ytsr");
+//Yt-playlists
+const ytpl = require("ytpl");
 //storage for urls from file
 const urls = new Map();
 const pathName = "playlists/";
+//storage for urls from YT-playlist
+const playlists = new Map();
 
 async function execute(message, args) {
     //check for parameters
@@ -626,17 +630,8 @@ function load(message, args) {
             urls.get(message.guild.id).push(line);
         })
         .on("close", () => {
-            playArgs = [];
             //initialize first song
-            playArgs.push(urls.get(message.guild.id)[0]);
-            execute(message, playArgs)
-                .then(
-                    function () {
-                        //add all other songs
-                        urls.get(message.guild.id).shift();
-                        executeRecursion(message, urls.get(message.guild.id));
-                    }
-                );
+            executeRecursion(message, urls.get(message.guild.id));
             message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
         })
         .on("error", (err) => {
@@ -758,6 +753,46 @@ async function search(message, args) {
     return message.channel.send(text);
 }
 
+async function addPlaylist(message, args) {
+    //no parameter
+    if (args.length == 0) {
+        util.logUserError("User tried to load from YT-playlist without parameter.", "music: addPlaylist", message.member, "None");
+        return message.channel.send("Missing parameter: No playlist link!");
+    }
+    //incorrect voice channel
+    if (!message.member.voice.channel) {
+        util.logUserError("User was not connected to a voice channel", "music: addPlaylist", message.member, "Parameter: " + args[0]);
+        return message.channel.send("You need to be in a voice channel to attach songs from a playlist to the queue!");
+    }
+
+    //check if there is already an playlist-array for this guild
+    if (!playlists.get(message.guild.id)) {
+        playlists.set(message.guild.id, []);
+    }
+
+    //request YT-playlist
+    var result;
+    try {
+        result = await ytpl(args[0], { limit: 0 });
+    }
+    catch (err) {
+        util.logErr(err, "music: addPlaylist: await ytpl", "Parameter: " + args[0]);
+        return message.channel.send("YT-Downloader could not resolve this playlist-link!");
+    }
+    //loop trough results
+    try {
+        for (i = 0; i < result.items.length; i++) {
+            playlists.get(message.guild.id).push(result.items[i].url_simple);
+        }
+    }
+    catch (err) {
+        util.logErr(err, "music: addPlaylist: examine results", "Parameter: " + args[0]);
+        return message.channel.send("Error while examining the results.");
+    }
+    //add all songs to the queue via recursion
+    executeRecursion(message, playlists.get(message.guild.id));
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -777,5 +812,6 @@ module.exports = {
     requested: requested,
     removeDoubles: removeDoubles,
     playDirect: playDirect,
-    search: search
+    search: search,
+    addPlaylist: addPlaylist
 }

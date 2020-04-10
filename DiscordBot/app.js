@@ -13,6 +13,7 @@ function help(message) {
     text += "[Command <arguments>]      [Description]                                      [Aliases]\n";
     text += "play <YT-URL>              - Add song to the queue                            - add\n";
     text += "search <query, max = 5>    - Search for a query on YouTube                    - \n";
+    text += "playlist <YT-URL>          - Add a YT-playlist to the queue                   - \n";
     text += "pause                      - Pause                                            - p\n";
     text += "resume                     - Resume after paused                              - res, continue\n";
     text += "skip <int = 1>             - Skip multiple songs                              - s\n";
@@ -146,6 +147,9 @@ client.on("message", async message => {
             break;
         case "search":
             music.search(message, args);
+            break;
+        case "playlist":
+            music.addPlaylist(message, args);
             break;
         default:
             message.channel.send("Please enter a valid command!");

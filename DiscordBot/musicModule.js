@@ -89,6 +89,17 @@ async function execute(message, args) {
     }
 }
 
+function executeRecursion(message, localUrls) {
+    //test, if there are any more urls to add or not
+    if ((!localUrls) || (!localUrls[0]) || (localUrls.length == 0)) {
+        return message.channel.send(`Finished loading ${message.member}!`);
+    }
+    execute(message, localUrls).then(function () {
+        localUrls.shift();
+        executeRecursion(message, localUrls);
+    });
+}
+
 function play(message) {
     const serverQueue = queues.get(message.guild.id);
     //missing queue
@@ -127,6 +138,49 @@ function play(message) {
     message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
 }
 
+function playDirect(message, args) {
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue --> Execute
+    if (!serverQueue) {
+        return execute(message, args);
+    }
+    //check for parameters
+    if (args.length == 0) {
+        util.logUserError("Found no YT-URL in 'playDirect'-statement", "music: playDirect", message.member, "None");
+        return message.channel.send("Missing arguments: No URL!");
+    }
+    //check for voiceChannel
+    const voiceChannel = message.member.voice.channel;
+    if (!voiceChannel) {
+        util.logUserError("User was not connected to a voice channel", "music: playDirect", message.member, "URL: " + args[0]);
+        return message.channel.send("You need to be in a voice channel to play music!");
+    }
+    //try to receive song info
+    var songInfo;
+    try {
+        songInfo = await ytdl.getInfo(args[0], { quality: 'highestaudio', filter: 'audioonly' });
+    }
+    catch (err) {
+        util.logErr(err, "music: playDirect: ytdl.getInfo", "URL: " + args[0]);
+        return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
+    }
+
+    const song = {
+        title: songInfo.title,
+        url: songInfo.video_url,
+        user: message.member
+    };
+
+    //double unshift and then skip --> current song won't be pushed to the end of the queue
+    serverQueue.songs.unshift(song);
+    serverQueue.songs.unshift(song);
+    skipArgs = [];
+    skipArgs.push("1");
+    //skip resumes if paused
+    skip(message, skipArgs, false);
+    //play will annouce the song
+}
+
 function vol(message, args) {
     //no parameter --> reset volume to 5 (standard)
     if (args.length == 0) {
@@ -149,7 +203,7 @@ function vol(message, args) {
         return message.channel.send("Nothing is currently being played!");
     }
     //range of volume
-    if (0 >= args[0]) {
+    if (0 > args[0]) {
         util.logUserError("User tried to set negative volume", "music: vol", message.member, "Parameter: " + args[0]);
         return message.channel.send("There can't be a negative volume!");
     }
@@ -176,7 +230,7 @@ function count(message) {
 
 function clear(message) {
     //log every try in console
-    util.logUserError("Called 'clear' function.", "music: clear: log console", message.member, "INFO only");
+    util.logInfo("Called 'clear' function.", "music: clear: log console", "User: " + message.member);
 
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
@@ -187,9 +241,9 @@ function clear(message) {
     const num = serverQueue.songs.length;
     serverQueue.songs = [];
     //not in a voice channel --> delete serverQueue and return
-    if (!message.guild.voice) {
+    if (message.guild.voice.speaking === null) {
         queues.delete(message.guild.id);
-        return message.channel.send(`Deleted queue of ${num} songs!`);
+        return message.channel.send(`Deleted queue of ${num} songs while not connected to a voice chat!`);
     }
     //in a voice channel --> check if playing, if not, resume (so the end event will clear everything up)
     try {
@@ -203,7 +257,7 @@ function clear(message) {
         util.logErr(err, "music: clear: end dispatcher", "None");
         message.channel.send(`Deleted queue of ${num} songs, but could not end currently playing track!`);
     }
-    return message.channel.send(`Deleted queue of ${num} songs!`);
+    return message.channel.send(`Deleted queue of ${num} songs while being connected to a voice chat!`);
 }
 
 function now(message) {
@@ -333,8 +387,7 @@ function skip(message, args, looping) {
         return message.channel.send("Tried to skip but failed while stopping dispatcher.");
     }
     //only return text when user called 'skip'-function directly, not another function
-    const msg = message.content.substr(1);
-    if (msg.startsWith("skip ")) {
+    if (message.content.startsWith("skip ")) {
         return message.channel.send("Skipped " + args[0] + " song(s)!");
     }
 }
@@ -470,7 +523,7 @@ function resume(message) {
         return message.channel.send("You need to be in the same voice channel as the bot in order to resume the music!");
     }
     //if bot dropped out of voice channel, try to bring it back in ans restart song (continuing not possible)
-    if (!message.guild.voice) {
+    if (message.guild.voice.speaking === null) {
         try {
             serverQueue.connection = serverQueue.voiceChannel.join();
         }
@@ -555,9 +608,10 @@ function load(message, args) {
         return message.channel.send("You need to be in a voice channel to attach songs from a file to the queue!");
     }
 
-    //empty array
-    urls.delete(message.guild.id);
-    urls.set(message.guild.id, []);
+    //check if there is already an url-array for this guild
+    if (!urls.get(message.guild.id)) {
+        urls.set(message.guild.id, []);
+    }
 
     //create stream interface
     const readLineFile = objLine.createInterface({
@@ -577,10 +631,8 @@ function load(message, args) {
                 .then(
                     function () {
                         //add all other songs
-                        for (i = 1; i < urls.get(message.guild.id).length; i++) {
-                            playArgs[0] = urls.get(message.guild.id)[i];
-                            execute(message, playArgs);
-                        }
+                        urls.get(message.guild.id).shift();
+                        executeRecursion(message, urls.get(message.guild.id));
                     }
                 );
             message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
@@ -635,8 +687,8 @@ function removeDoubles(message) {
         util.logUserError("User tried to remove doubles in empty queue.", "music: removeDoubles", message.member, "None");
         return message.channel.send("Nothing is currently in the queue!");
     }
+    removed = 0;
     try {
-        const removed = 0;
         for (i = 0; i < serverQueue.songs.length; i++) {
             for (j = i + 1; j < serverQueue.songs.length; j++) {
                 if (serverQueue.songs[j].url == serverQueue.songs[i].url) {
@@ -670,5 +722,6 @@ module.exports = {
     load: load,
     write: write,
     requested: requested,
-    removeDoubles: removeDoubles
+    removeDoubles: removeDoubles,
+    playDirect: playDirect
 }

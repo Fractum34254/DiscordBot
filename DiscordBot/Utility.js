@@ -6,15 +6,23 @@ const objLine = require('readline');
 
 function logErr(err, position, info) {
     var cDate = new Date();
-    console.log("\n----[POSITION: " + position + "]----[ERROR]----[TIME: " + cDate.getHours() + ":" + cDate.getMinutes() + ":" + cDate.getSeconds() + cDate.getMilliseconds() + "]----------");
+    console.log("\n----[POSITION: " + position + "]----[ERROR]----[TIME: " + cDate.toString() + "]----------");
     console.log(err);
     console.log("[Additional Information] " + info);
     console.log("----------[ERROR END]----------\n");
 }
 
+function logInfo(info, position, addInfo) {
+    var cDate = new Date();
+    console.log("\n----[POSITION: " + position + "]----[INFO]----[TIME: " + cDate.toString() + "]----------");
+    console.log(info);
+    console.log("[Additional Information] " + addInfo);
+    console.log("----------[INFO END]----------\n");
+}
+
 function logUserError(warn, position, user, info) {
     var cDate = new Date();
-    console.log("\n----------[POSITION: " + position + "]----[USER ERROR]----[USER: " + user + "]----[TIME: " + cDate.getHours() + ":" + cDate.getMinutes() + ":" + cDate.getSeconds() + cDate.getMilliseconds() + "]----------");
+    console.log("\n----------[POSITION: " + position + "]----[USER ERROR]----[USER: " + user + "]----[TIME: " + cDate.toString() + "]----------");
     console.log(err);
     console.log("[Additional Information] " + info);
     console.log("----[USER ERROR END]----------\n");
@@ -51,5 +59,6 @@ module.exports =
     {
         logErr: logErr,
         logUserError: logUserError,
-        randomize: randomize
+        randomize: randomize,
+        logInfo: logInfo
     }

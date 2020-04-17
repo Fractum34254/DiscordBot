@@ -247,7 +247,7 @@ function clear(message) {
     const num = serverQueue.songs.length;
     serverQueue.songs = [];
     //not in a voice channel --> delete serverQueue and return
-    if (message.guild.voice.speaking === null) {
+    if (!message.guild.voice) {
         queues.delete(message.guild.id);
         return message.channel.send(`Deleted queue of ${num} songs while not connected to a voice chat!`);
     }
@@ -258,12 +258,13 @@ function clear(message) {
             serverQueue.connection.dispatcher.resume();
         }
         serverQueue.connection.dispatcher.end();
+        return message.channel.send(`Deleted queue of ${num} songs while being connected to a voice chat!`);
     }
     catch (err) {
         util.logErr(err, "music: clear: end dispatcher", "None");
-        message.channel.send(`Deleted queue of ${num} songs, but could not end currently playing track!`);
+        queues.delete(message.guild.id);
+        return message.channel.send(`Deleted queue of ${num} songs, but could not end currently playing track!`);
     }
-    return message.channel.send(`Deleted queue of ${num} songs while being connected to a voice chat!`);
 }
 
 function now(message) {
@@ -528,17 +529,6 @@ function resume(message) {
         util.logUserError("User was not connected to the correct voice channel", "music: resume", message.member, "None");
         return message.channel.send("You need to be in the same voice channel as the bot in order to resume the music!");
     }
-    //if bot dropped out of voice channel, try to bring it back in ans restart song (continuing not possible)
-    if (message.guild.voice.speaking === null) {
-        try {
-            serverQueue.connection = serverQueue.voiceChannel.join();
-        }
-        catch (err) {
-            util.logErr(err, "music: resume: rejoin voiceChannel", "None");
-            return message.channel.send("Failed rejoining the original voice channel! Not able to continue.");
-        }
-        return play(message); //will do every text output
-    }
     //set 'playing' to true
     serverQueue.playing = true;
     //try to fire 'resume' event for dispatcher
@@ -547,7 +537,13 @@ function resume(message) {
     }
     catch (err) {
         util.logErr(err, "music: resume: resume dispatcher", "None");
-        return message.channel.send("Error while trying to resume. Maybe missing dispatcher object!");
+        try {
+            play(message);
+        }
+        catch {
+            util.logErr(err, "music: resume: dispatcher - play", "None");
+            return message.channel.send("Error while trying to resume. Maybe missing dispatcher object!");
+        }
     }
     return message.channel.send("_Resuming!_");
 }
@@ -664,7 +660,7 @@ function write(message, args) {
             errorCount++;
         }
     }
-    return message.channel.send("Succesfully wrote " + 100 * (serverQueue.songs.length - errorCount) / serverQueue.songs.length + "% to the file " + args[0] + "!");
+    return message.channel.send("Successfully wrote " + 100 * (serverQueue.songs.length - errorCount) / serverQueue.songs.length + "% to the file " + args[0] + "!");
 }
 
 function requested(message) {

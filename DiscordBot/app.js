@@ -66,7 +66,7 @@ function help(message, args) {
                 moduleCommands.push({ name: "help <Module = all>", description: "This menu", aliases: "h" });
                 break;
             default:
-                util.logUserError("User entered non-registered module", "help", "Parameter: " + args[i]);
+                util.logUserError("User entered non-registered module", "help", message.member, "Parameter: " + args[i]);
                 return message.channel.send("Unknown module: " + args[i]);
         }
         commands.push(moduleCommands);

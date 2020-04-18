@@ -675,8 +675,9 @@ function load(message, args) {
     }
 
     //create stream interface
+    var readLineFile = null;
     try {
-        const readLineFile = objLine.createInterface({
+        readLineFile = objLine.createInterface({
             input: fs.createReadStream(pathName + args[0])
         });
     }

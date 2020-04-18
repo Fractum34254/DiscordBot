@@ -399,6 +399,65 @@ function skip(message, args, looping) {
     }
 }
 
+function unskip(message, args) {
+    serverQueue = queues.get(message.guild.id);
+    //no parameter --> unskip 1 song
+    if (args.length == 0) {
+        args.push("1");
+    }
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("No music playing while user tried to unskip songs", "music: unskip", message.member, "Parameter: " + args[0]);
+        return message.channel.send("Nothing is currently being played!");
+    }
+    //incorrect voice channel
+    if (message.member.voice.channel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: unskip", message.member, "Parameter: " + args[0]);
+        return message.channel.send("You need to be in the same voice channel as the bot to unskip songs!");
+    }
+    //incorrect parameter (no number)
+    if (isNaN(args[0])) {
+        util.logUserError("User did not enter a valid parameter", "music: unskip", message.member, "Parameter: " + args[0]);
+        return message.channel.send("You need to enter a valid integer!");
+    }
+    //incorrect parameter negative/zero
+    if (args[0] <= 0) {
+        util.logUserError("User tried to unskip negative/zero songs", "music: unskip", message.member, "Parameter: " + args[0]);
+        return message.channel.send("Unskipping negative/zero songs does not make any sense!");
+    }
+    //unskipping too much
+    if (args[0] > serverQueue.songs.length) {
+        util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.member, "Parameter: " + args[0] + " | Queue Length: " + serverQueue.songs.length);
+        return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
+    }
+    //paused --> resume
+    if (!serverQueue.playing) {
+        resume(message);
+    }
+    //remove unskipped songs
+    unskipped = serverQueue.songs.splice(serverQueue.songs.length - args[0], args[0]);
+    //add them to the front of the queue
+    serverQueue.songs = unskipped.concat(serverQueue.songs);
+    //put last song in front, so dispatcher.end() will put it in the back again if looping
+    last = serverQueue.songs.pop();
+    serverQueue.songs.unshift(last);
+    if (!serverQueue.looping) {
+        serverQueue.songs.push(last);
+    }
+    //try to end currently playing song
+    try {
+        serverQueue.connection.dispatcher.end();
+    }
+    catch (err) {
+        util.logErr(err, "music: unskip: end dispatcher", "Parameter: " + args[0]);
+        return message.channel.send("Tried to unskip but failed while stopping dispatcher.");
+    }
+    //only return text when user called 'unskip'-function directly, not another function
+    if (message.content.startsWith("unskip ")) {
+        return message.channel.send("Unskipped " + args[0] + " song(s)!");
+    }
+}
+
 function setLooping(message, args) {
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
@@ -616,9 +675,15 @@ function load(message, args) {
     }
 
     //create stream interface
-    const readLineFile = objLine.createInterface({
-        input: fs.createReadStream(pathName + args[0])
-    });
+    try {
+        const readLineFile = objLine.createInterface({
+            input: fs.createReadStream(pathName + args[0])
+        });
+    }
+    catch (err) {
+        util.logUserError(err, "music: load: createFileInterface", message.member, "Maybe wrong path?");
+        return message.channel.send("Could not load " + args[0] + ": Wrong name!");
+    }
 
     //each line generates an event
     readLineFile
@@ -798,6 +863,7 @@ module.exports = {
     shuffle: shuffle,
     again: again,
     skip: skip,
+    unskip: unskip,
     setLooping: setLooping,
     list: list,
     pause: pause,

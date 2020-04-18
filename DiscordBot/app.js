@@ -15,6 +15,7 @@ function help(message) {
     commands.push({ name: "pause", description: "Pause the current song", aliases: "p" });
     commands.push({ name: "resume", description: "Resume after paused", aliases: "res, continue" });
     commands.push({ name: "skip <int = 1>", description: "Skip multiple songs", aliases: "s" });
+    commands.push({ name: "unskip <int = 1>", description: "Unskip multiple songs", aliases: "us" });
     commands.push({ name: "queue <page = 1 | all>", description: "Show the queue", aliases: "q" });
     commands.push({ name: "volume <float = 5.0>", description: "Set the volume", aliases: "vol, v" });
     commands.push({ name: "shuffle", description: "Shuffle the queue", aliases: "random, randomize" });
@@ -98,6 +99,10 @@ client.on("message", async message => {
         case "skip":
         case "s":
             music.skip(message, args);
+            break;
+        case "unskip":
+        case "us":
+            music.unskip(message, args);
             break;
         case "pause":
         case "p":

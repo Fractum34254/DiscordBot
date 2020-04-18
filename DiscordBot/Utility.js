@@ -7,7 +7,7 @@ const objLine = require('readline');
 function logErr(err, position, info) {
     var cDate = new Date();
     console.log("\n------------[ERROR]------------");
-    console.log("[POSITION] " + position + "\n[TIME] " + cDate.toString() + "\n[MESSAGE]";
+    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(err);
     console.log("[Additional Information] " + info);
     console.log("----------[ERROR END]----------\n");
@@ -16,7 +16,7 @@ function logErr(err, position, info) {
 function logInfo(info, position, addInfo) {
     var cDate = new Date();
     console.log("\n------------[INFO]------------");
-    console.log("[POSITION] " + position + "\n[TIME] " + cDate.toString() + "\n[MESSAGE]";
+    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(info);
     console.log("[Additional Information] " + addInfo);
     console.log("----------[INFO END]----------\n");
@@ -25,7 +25,7 @@ function logInfo(info, position, addInfo) {
 function logUserError(warn, position, user, info) {
     var cDate = new Date();
     console.log("\n------------[USER ERROR]------------");
-    console.log("[POSITION] " + position + "\n[TIME] " + cDate.toString() + "\n[USER] " + user + "\n[MESSAGE]";
+    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user + "\n[MESSAGE]");
     console.log(warn);
     console.log("[Additional Information] " + info);
     console.log("----------[USER ERROR END]----------\n");

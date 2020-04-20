@@ -30,7 +30,7 @@ async function execute(message, args) {
     const voiceChannel = message.member.voice.channel;
 
     if (!voiceChannel) {
-        util.logUserError("User was not connected to a voice channel", "music: execute", message.member, "URL: " + args[0]);
+        util.logUserError("User was not connected to a voice channel", "music: execute", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to play music!");
     }
 
@@ -38,7 +38,7 @@ async function execute(message, args) {
     const permissions = voiceChannel.permissionsFor(message.client.user);
 
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.member, "URL: " + args[0]);
+        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("I need the permissions to join and speak in your voice channel!");
     }
 
@@ -48,7 +48,7 @@ async function execute(message, args) {
         songInfo = await ytdl.getInfo(args[0], { quality: 'highestaudio', filter: 'audioonly' });
     }
     catch (err) {
-        util.logErr(err, "music: execute: ytdl.getInfo", "URL: " + args[0]);
+        util.logErr(err, "music: execute: ytdl.getInfo", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
     }
 
@@ -80,7 +80,7 @@ async function execute(message, args) {
             connection = await voiceChannel.join();
         }
         catch (err) {
-            util.logErr(err, "music: execute: join VoiceChannel", "URL: " + args[0]);
+            util.logErr(err, "music: execute: join VoiceChannel", "Parameter: " + util.arrToString(args, " "));
             queues.delete(message.guild.id);
             return message.channel.send("Error while trying to join the voice channel.\nDeleted queue.");
         }
@@ -158,7 +158,7 @@ async function playDirect(message, args) {
     //check for voiceChannel
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel) {
-        util.logUserError("User was not connected to a voice channel", "music: playDirect", message.member, "URL: " + args[0]);
+        util.logUserError("User was not connected to a voice channel", "music: playDirect", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to play music!");
     }
     //try to receive song info
@@ -167,7 +167,7 @@ async function playDirect(message, args) {
         songInfo = await ytdl.getInfo(args[0], { quality: 'highestaudio', filter: 'audioonly' });
     }
     catch (err) {
-        util.logErr(err, "music: playDirect: ytdl.getInfo", "URL: " + args[0]);
+        util.logErr(err, "music: playDirect: ytdl.getInfo", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
     }
 
@@ -188,29 +188,34 @@ async function playDirect(message, args) {
 }
 
 function vol(message, args) {
-    //no parameter --> reset volume to 5 (standard)
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("There was no music playing while user tried to change volume", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("Nothing is currently being played!");
+    }
+    //no parameter --> return volume
     if (args.length == 0) {
-        args.push("5");
+        return message.channel.send("Current volume: " + serverQueue.volume);
+    }
+    //args: reset/r --> set volume to 5
+    if (args[0] == "r" || args[0] == "reset") {
+        args.shift();
+        args.unshift("5");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: vol", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to the correct voice channel", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to change the volume!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: vol", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid number!");
-    }
-    serverQueue = queues.get(message.guild.id);
-    //no serverQueue
-    if (!serverQueue) {
-        util.logUserError("There was no music playing while user tried to change volume", "music: vol", message.member, "Parameter: " + args[0]);
-        return message.channel.send("Nothing is currently being played!");
     }
     //range of volume
     if (0 > args[0]) {
-        util.logUserError("User tried to set negative volume", "music: vol", message.member, "Parameter: " + args[0]);
+        util.logUserError("User tried to set negative volume", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("There can't be a negative volume!");
     }
     serverQueue.volume = args[0];
@@ -218,7 +223,7 @@ function vol(message, args) {
         serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     }
     catch (err) {
-        util.logErr(err, "music: vol: Set dispatcher volume", "Parameter: " + args[0]);
+        util.logErr(err, "music: vol: Set dispatcher volume", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send(`Failed to change volume to ${serverQueue.volume} on current song!`);
     }
     return message.channel.send(`Changed volume to ${serverQueue.volume}`);
@@ -339,34 +344,34 @@ function skip(message, args, looping) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to skip songs", "music: skip", message.member, "Parameter: " + args[0]);
+        util.logUserError("No music playing while user tried to skip songs", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //set looping parameter
     looping = (typeof looping === 'undefined') ? serverQueue.looping : looping;
     //check if looping parameter is true/false
     if (!(typeof looping === 'boolean')) {
-        util.logErr("Unmatched parameter types: 'Looping' was not a boolean.", "music: skip", "Parameter: " + args[0]);
+        util.logErr("Unmatched parameter types: 'Looping' was not a boolean.", "music: skip", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Parameter 'looping' did not match the specified 'boolean' type.");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: skip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to the correct voice channel", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to skip songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: skip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter negative/zero
     if (args[0] <= 0) {
-        util.logUserError("User tried to skip negative/zero songs", "music: skip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User tried to skip negative/zero songs", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Skipping negative/zero songs does not make any sense!");
     }
     //skipping too much
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.member, "Parameter: " + args[0] + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     //paused --> resume
@@ -390,7 +395,7 @@ function skip(message, args, looping) {
         serverQueue.connection.dispatcher.end();
     }
     catch (err) {
-        util.logErr(err, "music: skip: end dispatcher", "Parameter: " + args[0]);
+        util.logErr(err, "music: skip: end dispatcher", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Tried to skip but failed while stopping dispatcher.");
     }
     //only return text when user called 'skip'-function directly, not another function
@@ -407,27 +412,27 @@ function unskip(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to unskip songs", "music: unskip", message.member, "Parameter: " + args[0]);
+        util.logUserError("No music playing while user tried to unskip songs", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: unskip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to the correct voice channel", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to unskip songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: unskip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter negative/zero
     if (args[0] <= 0) {
-        util.logUserError("User tried to unskip negative/zero songs", "music: unskip", message.member, "Parameter: " + args[0]);
+        util.logUserError("User tried to unskip negative/zero songs", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Unskipping negative/zero songs does not make any sense!");
     }
     //unskipping too much
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.member, "Parameter: " + args[0] + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     //paused --> resume
@@ -449,7 +454,7 @@ function unskip(message, args) {
         serverQueue.connection.dispatcher.end();
     }
     catch (err) {
-        util.logErr(err, "music: unskip: end dispatcher", "Parameter: " + args[0]);
+        util.logErr(err, "music: unskip: end dispatcher", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Tried to unskip but failed while stopping dispatcher.");
     }
     //only return text when user called 'unskip'-function directly, not another function
@@ -462,7 +467,7 @@ function setLooping(message, args) {
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to set looping status", "music: setLooping", message.member, "Parameter: " + args[0]);
+        util.logUserError("No music playing while user tried to set looping status", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //no parameter --> return current looping status
@@ -471,12 +476,12 @@ function setLooping(message, args) {
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: setLooping", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to the correct voice channel", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to set the looping status!");
     }
     //incorrect parameter (no number)
     if (args[0] != "true" && args[0] != "false") {
-        util.logUserError("User did not enter a valid parameter", "music: setLooping", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //set looping
@@ -492,12 +497,12 @@ function list(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to list queue", "music: list", message.member, "Parameter: " + args[0]);
+        util.logUserError("No music playing while user tried to list queue", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0]) && (args[0] != "all")) {
-        util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //display queue
@@ -514,17 +519,17 @@ function list(message, args) {
             message.channel.send(text);
         }
         catch (err) {
-            util.logErr(err, "music: list: display all", "Parameter: all");
+            util.logErr(err, "music: list: display all", "Parameter: " + util.arrToString(args, " "));
             message.channel.send("Something went wrong while listing the entire queue.");
         }
     }
     else {
         if (args[0] <= 0) {
-            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + args[0]);
+            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
             return message.channel.send("You need to enter an integer bigger than zero!");
         }
         if ((args[0] - 1) * 10 > serverQueue.songs.length) {
-            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + args[0] + " | Queue length: " + serverQueue.songs.length);
+            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue length: " + serverQueue.songs.length);
             return message.channel.send("Your page number is too big! There are only " + serverQueue.songs.length + " songs in queue.");
         }
         try {
@@ -535,7 +540,7 @@ function list(message, args) {
             message.channel.send(text);
         }
         catch (err) {
-            util.logErr(err, "music: list: display page", "Parameter: " + args[0]);
+            util.logErr(err, "music: list: display page", "Parameter: " + util.arrToString(args, " "));
             message.channel.send("Something went wrong while displaying page " + args[0] + " of the queue.");
         }
     }
@@ -615,27 +620,27 @@ function remove(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No serverQueue while user tried to remove songs", "music: remove", message.member, "Parameter: " + args[0]);
+        util.logUserError("No serverQueue while user tried to remove songs", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently in the queue!");
     }
     //incorrect voice channel
     if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: remove", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to the correct voice channel", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to remove songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: remove", message.member, "Parameter: " + args[0]);
+        util.logUserError("User did not enter a valid parameter", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter 0
     if (args[0] <= 0) {
-        util.logUserError("User tried to remove negative/zero songs", "music: remove", message.member, "Parameter: " + args[0]);
+        util.logUserError("User tried to remove negative/zero songs", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Removing negative/zero songs does not make any sense!");
     }
     //index out of range
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to remove a song out of the queue", "music: remove", message.member, "Parameter: " + args[0] + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to remove a song out of the queue", "music: remove", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     try {
@@ -651,7 +656,7 @@ function remove(message, args) {
         removed = serverQueue.songs.splice(args[0] - 1, 1);
     }
     catch (err) {
-        util.logErr(err, "music: remove: splice queue", "Parameter: " + args[0]);
+        util.logErr(err, "music: remove: splice queue", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("An error occured while trying to remove song #" + args[0] + " from the queue. Sorry :(");
     }
     return message.channel.send("Removed **" + removed[0].title + "** from the queue (was on position " + args[0] + ").");
@@ -665,7 +670,7 @@ function load(message, args) {
     }
     //incorrect voice channel
     if (!message.member.voice.channel) {
-        util.logUserError("User was not connected to a voice channel", "music: load", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to a voice channel", "music: load", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to attach songs from a file to the queue!");
     }
 
@@ -682,7 +687,7 @@ function load(message, args) {
         });
     }
     catch (err) {
-        util.logUserError(err, "music: load: createFileInterface", message.member, "Maybe wrong path?");
+        util.logUserError(err, "music: load: createFileInterface", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Could not load " + args[0] + ": Wrong name!");
     }
 
@@ -697,7 +702,7 @@ function load(message, args) {
             message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
         })
         .on("error", (err) => {
-            util.logErr(err, "music: load: readLineFile", "Parameter: " + args[0]);
+            util.logErr(err, "music: load: readLineFile", "Parameter: " + util.arrToString(args, " "));
             message.channel.send("Error while trying to add **" + args[0] + "** to the queue!");
         });
 }
@@ -711,7 +716,7 @@ function write(message, args) {
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("User tried to write empty queue to file.", "music: write", message.member, "Parameter: " + args[0]);
+        util.logUserError("User tried to write empty queue to file.", "music: write", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("No queue to save!");
     }
     //write all URLs to a file
@@ -721,7 +726,7 @@ function write(message, args) {
             util.writeLineToFile(pathName + args[0], serverQueue.songs[i].url);
         }
         catch (err) {
-            util.logErr(err, "music: write: writeLineToFile", "Parameter: " + args[0] + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
+            util.logErr(err, "music: write: writeLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
             message.channel.send("Error while trying to save the url of **" + serverQueue.songs[i].title + "**. Continuing.");
             errorCount++;
         }
@@ -770,26 +775,22 @@ async function search(message, args) {
         util.logUserError("User did not enter a search parameter", "music: search", message.member, "None");
         return message.channel.send("You need to enter a query!");
     }
-    //no result number
-    if (args.length == 1) {
+    //test for result number
+    if (isNaN(args[args.length - 1])) {
         args.push("5");
     }
-    //test, if result number ist valid
-    if (isNaN(args[1])) {
-        util.logUserError("User did not enter a valid parameter", "music: search", message.member, "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
-        return message.channel.send("You need to enter a valid max result number!");
-    }
-    if (args[1] > 20) {
-        util.logUserError("User entered a too large number", "music: search", message.member, "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+    results = args.pop();
+    if (results > 20) {
+        util.logUserError("User entered a too large number", "music: search", message.member, "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);
         return message.channel.send("You need to enter a max result number smaller then or equal to 20!");
     }
     //try searching via ytsr
     var result;
     try {
-        result = await ytsr(args[0], { limit: args[1] });
+        result = await ytsr(util.arrToString(args, " "), { limit: results });
     }
     catch (err) {
-        util.logErr(err, "music: search: await ytsr", "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        util.logErr(err, "music: search: await ytsr", "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);
         return message.channel.send("Error while searching.");
     }
     text = "";
@@ -803,13 +804,16 @@ async function search(message, args) {
         }
     }
     catch (err) {
-        util.logErr(err, "music: search: examine results", "Parameter: Query: " + args[0] + " Max Result Number: " + args[1]);
+        util.logErr(err, "music: search: examine results", "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);
         message.channel.send("Error while examining the results. Already extracted:");
         if (text === "");
         {
             return message.channel.send("Nothing extracted.");
         }
         return message.channel.send(text);
+    }
+    if (text == "") {
+        return message.channel.send("No search results!");
     }
     message.channel.send("**Search results:**");
     return message.channel.send(text);
@@ -823,7 +827,7 @@ async function addPlaylist(message, args) {
     }
     //incorrect voice channel
     if (!message.member.voice.channel) {
-        util.logUserError("User was not connected to a voice channel", "music: addPlaylist", message.member, "Parameter: " + args[0]);
+        util.logUserError("User was not connected to a voice channel", "music: addPlaylist", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to attach songs from a playlist to the queue!");
     }
 
@@ -838,7 +842,7 @@ async function addPlaylist(message, args) {
         result = await ytpl(args[0], { limit: 0 });
     }
     catch (err) {
-        util.logErr(err, "music: addPlaylist: await ytpl", "Parameter: " + args[0]);
+        util.logErr(err, "music: addPlaylist: await ytpl", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("YT-Downloader could not resolve this playlist-link!");
     }
     //loop trough results
@@ -848,7 +852,7 @@ async function addPlaylist(message, args) {
         }
     }
     catch (err) {
-        util.logErr(err, "music: addPlaylist: examine results", "Parameter: " + args[0]);
+        util.logErr(err, "music: addPlaylist: examine results", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Error while examining the results.");
     }
     //add all songs to the queue via recursion

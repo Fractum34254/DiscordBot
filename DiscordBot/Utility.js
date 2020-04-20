@@ -74,6 +74,17 @@ function trimString(str, length, token) {
     return str;
 }
 
+function arrToString(arr, spacing) {
+    if (arr.length == 0) return "";
+    if (!spacing) spacing = " ";
+    str = arr[0];
+    for (i = 1; i < arr.length; i++) {
+        str += spacing;
+        str += arr[i];
+    }
+    return str;
+}
+
 module.exports =
     {
         logErr: logErr,
@@ -81,5 +92,6 @@ module.exports =
         randomize: randomize,
         logInfo: logInfo,
         trimString: trimString,
-        writeLineToFile: writeLineToFile
+    writeLineToFile: writeLineToFile,
+        arrToString: arrToString
     }

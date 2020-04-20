@@ -4,7 +4,12 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 
 const music = require('./musicModule.js');
+const fun = require('./funModule.js');
 const util = require('./Utility.js');
+
+function listModules(message) {
+    return message.channel.send("Available modules: Main, Music, Fun.");
+}
 
 function help(message, args) {
     //no arguments: print all
@@ -18,7 +23,7 @@ function help(message, args) {
 
     //if listing all, do a certain order:
     if (args.find(function (elem) { return (elem == "all"); })) {
-        args = ["main", "music"];
+        args = ["main", "music", "fun"];
     }
 
     //remove duplicates to avoid spam
@@ -33,6 +38,7 @@ function help(message, args) {
     for (i = 0; i < args.length; i++) {
         moduleCommands = [];
         switch (args[i]) {
+            case "Music":
             case "music":
                 //add name to names array
                 names.push("MUSIC MODULE");
@@ -47,7 +53,7 @@ function help(message, args) {
                 moduleCommands.push({ name: "queue <page = 1 | all>", description: "Show the queue", aliases: "q" });
                 moduleCommands.push({ name: "volume <float = 5.0>", description: "Set the volume", aliases: "vol, v" });
                 moduleCommands.push({ name: "shuffle", description: "Shuffle the queue", aliases: "random, randomize" });
-                moduleCommands.push({ name: "looping [<true/false>]", description: "Set looping status, if no parameter shows status", aliases: "loop" });
+                moduleCommands.push({ name: "looping [<true/false>]", description: "Set/Get looping status", aliases: "loop" });
                 moduleCommands.push({ name: "count", description: "Show size of the queue", aliases: "c, number" });
                 moduleCommands.push({ name: "now", description: "Show what is currently being played", aliases: "np" });
                 moduleCommands.push({ name: "again", description: "Play current song again", aliases: "replay, rp" });
@@ -59,14 +65,25 @@ function help(message, args) {
                 moduleCommands.push({ name: "save <name>", description: "Attach the queue to a file", aliases: "write" });
                 moduleCommands.push({ name: "load <name>", description: "Attach songs from a file to the queue", aliases: "l" });
                 break;
+            case "Main":
             case "main":
+            case "global":
                 //add name to names array
                 names.push("MAIN MODULE");
                 //list all main commands
                 moduleCommands.push({ name: "help <Module = all>", description: "This menu", aliases: "h" });
+                moduleCommands.push({ name: "modules", description: "List all modules", aliases: "mod" });
+                break;
+            case "Fun":
+            case "fun":
+                //add name to names array
+                names.push("FUN MODULE");
+                //list all main commands
+                moduleCommands.push({ name: "rps <rock|paper|scissors>", description: "Play against the bot!", aliases: "" });
+                moduleCommands.push({ name: "flip", description: "Flip a coin", aliases: "" });
                 break;
             default:
-                util.logUserError("User entered non-registered module", "help", message.member, "Parameter: " + args[i]);
+                util.logUserError("User entered non-registered module", "main: help", message.member, "Current parameter: " + args[i] + " | All parameters: " + util.arrToString(args, " "));
                 return message.channel.send("Unknown module: " + args[i]);
         }
         commands.push(moduleCommands);
@@ -226,8 +243,21 @@ client.on("message", async message => {
         case "playlist":
             music.addPlaylist(message, args);
             break;
+        case "modules":
+        case "mod":
+            listModules(message);
+            break;
+        case "rps":
+            fun.rps(message, args);
+            break;
+        case "flip":
+            fun.flip(message, args);
+            break;
         default:
+            args.unshift(first);
+            util.logUserError("User did not enter a valid command.", "main: message listener", message.member, "Parameter: " + util.arrToString(args, " "));
             message.channel.send("Please enter a valid command!");
+            break;
     }
 
 });

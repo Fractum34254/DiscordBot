@@ -30,7 +30,7 @@ async function execute(message, args) {
     const voiceChannel = message.member.voice.channel;
 
     if (!voiceChannel) {
-        util.logUserError("User was not connected to a voice channel", "music: execute", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User was not connected to a voice channel", "music: execute", message.member, "URL: " + args[0]);
         return message.channel.send("You need to be in a voice channel to play music!");
     }
 
@@ -38,7 +38,7 @@ async function execute(message, args) {
     const permissions = voiceChannel.permissionsFor(message.client.user);
 
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.member, "URL: " + args[0]);
         return message.channel.send("I need the permissions to join and speak in your voice channel!");
     }
 
@@ -48,7 +48,7 @@ async function execute(message, args) {
         songInfo = await ytdl.getInfo(args[0], { quality: 'highestaudio', filter: 'audioonly' });
     }
     catch (err) {
-        util.logErr(err, "music: execute: ytdl.getInfo", "Parameter: " + util.arrToString(args, " "));
+        util.logErr(err, "music: execute: ytdl.getInfo", "URL: " + args[0]);
         return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
     }
 
@@ -80,7 +80,7 @@ async function execute(message, args) {
             connection = await voiceChannel.join();
         }
         catch (err) {
-            util.logErr(err, "music: execute: join VoiceChannel", "Parameter: " + util.arrToString(args, " "));
+            util.logErr(err, "music: execute: join VoiceChannel", "URL: " + args[0]);
             queues.delete(message.guild.id);
             return message.channel.send("Error while trying to join the voice channel.\nDeleted queue.");
         }

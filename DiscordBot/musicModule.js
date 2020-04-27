@@ -527,7 +527,7 @@ function setLooping(message, args) {
 
 function list(message, args) {
     serverQueue = queues.get(message.guild.id);
-    //no parameter --> list first page
+    //no parameter --> list first page only
     if (args.length == 0) {
         args.push("1");
     }
@@ -538,8 +538,16 @@ function list(message, args) {
     }
     //incorrect parameter (no number)
     if (isNaN(args[0]) && (args[0] != "all")) {
-        util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
-        return message.channel.send("You need to enter a valid integer!");
+        util.logUserError("User did not enter a valid first parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You need to enter a valid number as first parameter!");
+    }
+    if ((args.length == 1) && (args[0] != "all")) {
+        args.push((parseInt(args[0]) + 1).toString(10));
+    }
+    //incorrect parameter (no number)
+    if (isNaN(args[1]) && (args[0] != "all")) {
+        util.logUserError("User did not enter a valid second parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You need to enter a valid number as second parameter!");
     }
     //display queue
     if (args[0] == "all") {
@@ -562,15 +570,19 @@ function list(message, args) {
     else {
         if (args[0] <= 0) {
             util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
-            return message.channel.send("You need to enter an integer bigger than zero!");
+            return message.channel.send("You need to enter an integer bigger than zero as first parameter!");
         }
         if ((args[0] - 1) * 10 > serverQueue.songs.length) {
             util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue length: " + serverQueue.songs.length);
-            return message.channel.send("Your page number is too big! There are only " + serverQueue.songs.length + " songs in queue.");
+            return message.channel.send("Your first page number is too big! There are only " + serverQueue.songs.length + " songs in queue.");
+        }
+        if (args[1] <= args[0]) {
+            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+            return message.channel.send("Your second parameter needs to be bigger than the first one!");
         }
         try {
             text = "";
-            for (i = 10 * (args[0] - 1); i < serverQueue.songs.length && i < 10 * (args[0]); i++) {
+            for (i = 10 * (args[0] - 1); i < serverQueue.songs.length && i < 10 * (args[1] - 1); i++) {
                 text += (++i + ". **" + serverQueue.songs[--i].title + "**\n");
             }
             message.channel.send(text);
@@ -580,6 +592,36 @@ function list(message, args) {
             message.channel.send("Something went wrong while displaying page " + args[0] + " of the queue.");
         }
     }
+}
+
+function link(message, args) {
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("No music playing while user tried to get a link", "music: link", message.member, "None");
+        return message.channel.send("Nothing is currently being played!");
+    }
+    //no parameter --> default: 1
+    if (args.length == 0) {
+        args.push("1");
+    }
+    //incorrect parameter (no number)
+    if (isNaN(args[0])) {
+        util.logUserError("User did not enter a valid parameter", "music: link", message.member, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You need to enter a valid integer!");
+    }
+    //incorrect parameter negative/zero
+    if (args[0] <= 0) {
+        util.logUserError("User tried to get link of a negative song / song zero", "music: link", message.member, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("Negative/zero songs do not make any sense!");
+    }
+    //nr too big
+    if (args[0] > serverQueue.songs.length) {
+        util.logUserError("User wanted the link to a song out of queue range.", "music: link", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
+        return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
+    }
+    args[0] = parseInt(args[0], 10);
+    return message.channel.send("Link to **" + serverQueue.songs[args[0] - 1].title + "**: " + serverQueue.songs[args[0] - 1].url);
 }
 
 function pause(message) {
@@ -919,5 +961,6 @@ module.exports = {
     removeDoubles: removeDoubles,
     playDirect: playDirect,
     search: search,
-    addPlaylist: addPlaylist
+    addPlaylist: addPlaylist,
+    link: link
 }

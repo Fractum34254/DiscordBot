@@ -76,7 +76,7 @@ function initCommands() {
     });
     commands.push({
         names: ["queue", "q"],
-        parameter: "<page = 1 | all>",
+        parameter: "<page = 1 | all [,endPage]>",
         description: "List the queue",
         module: "music",
         func: function (message, args) { music.list(message, args); }
@@ -117,6 +117,13 @@ function initCommands() {
         func: function (message, args) { music.now(message); }
     });
     commands.push({
+        names: ["link"],
+        parameter: "<int = 1>",
+        description: "Get the link to song nr.",
+        module: "music",
+        func: function (message, args) { music.link(message, args); }
+    });
+    commands.push({
         names: ["again", "replay", "rp"],
         parameter: "",
         description: "Play current song again",
@@ -126,7 +133,7 @@ function initCommands() {
     commands.push({
         names: ["playnow", "playdirect", "force"],
         parameter: "<YT-URL>",
-        description: "Add a song to the front of the queue and play it",
+        description: "Immediatly play a song",
         module: "music",
         func: function (message, args) { music.playDirect(message, args); }
     });
@@ -149,7 +156,7 @@ function initCommands() {
         parameter: "",
         description: "Remove all duplicates from queue",
         module: "music",
-        func: function (message, args) { music.execute(message, args); }
+        func: function (message, args) { music.removeDoubles(message); }
     });
     commands.push({
         names: ["clear", "cls"],
@@ -182,7 +189,7 @@ function initCommands() {
     commands.push({
         names: ["purge"],
         parameter: "<int>",
-        description: "Delete the last messages up to 200",
+        description: "Delete the last messages (up to 200)",
         module: "moderator",
         func: function (message, args) { mod.purge(message, args); }
     });

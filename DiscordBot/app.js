@@ -207,6 +207,13 @@ function initCommands() {
         module: "fun",
         func: function (message, args) { fun.flip(message); }
     });
+    commands.push({
+        names: ["randomColor", "randColor", "randomRGB", "randomcolor"],
+        parameter: "",
+        description: "Get a random color",
+        module: "fun",
+        func: function (message, args) { fun.randomColor(message); }
+    });
 }
 
 //Define all modules as objects

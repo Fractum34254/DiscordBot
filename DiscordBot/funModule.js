@@ -1,5 +1,7 @@
 ﻿//common functions (error handling etc)
 const util = require('./Utility.js');
+//for embeds
+const Discord = require('discord.js');
 
 function flip(message) {
     n = Math.round(Math.random());
@@ -65,7 +67,25 @@ function rps(message, args) {
     }
 }
 
+function randomColor(message) {
+    r = Math.floor(Math.random() * 256);
+    g = Math.floor(Math.random() * 256);
+    b = Math.floor(Math.random() * 256);
+    hex = util.rgbToHex(r, g, b);
+
+    embed = new Discord.MessageEmbed();
+    embed.setColor(hex);
+    embed.setTitle("Your color:");
+    embed.addFields(
+        { name: 'Hex', value: hex, inline: true },
+        { name: 'RGB', value: r.toString(10) + " " + g.toString(10) + " " + b.toString(10), inline: true }
+    );
+    embed.setFooter("Meme God Bot by Fractum#3592");
+    message.channel.send(embed);
+}
+
 module.exports = {
     flip: flip,
-    rps: rps
+    rps: rps,
+    randomColor: randomColor
 }

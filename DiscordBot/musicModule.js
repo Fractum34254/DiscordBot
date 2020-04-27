@@ -5,6 +5,8 @@ const path = require('path');
 const objLine = require('readline');
 //music queues
 const queues = new Map();
+//retry queues
+const retryQueues = new Map();
 //common functions (error handling etc)
 const util = require('./Utility.js');
 //YT-Downloader
@@ -19,7 +21,13 @@ const pathName = "playlists/";
 //storage for urls from YT-playlist
 const playlists = new Map();
 
-async function execute(message, args) {
+async function execute(message, args, text, retry) {
+    if (!(typeof text === 'boolean')) {
+        text = true;
+    }
+    if (!(typeof retry === 'boolean')) {
+        retry = false;
+    }
     //check for parameters
     if (args.length == 0) {
         util.logUserError("Found no YT-URL in 'play'-statement", "music: execute", message.member, "None");
@@ -49,7 +57,18 @@ async function execute(message, args) {
     }
     catch (err) {
         util.logErr(err, "music: execute: ytdl.getInfo", "URL: " + args[0]);
-        return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
+        message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
+        if (retry) {
+            retryQueue = retryQueues.get(message.guild.id);
+            if (!retryQueue) {
+                retryQueues.set(message.guild.id, [args[0]]);
+            }
+            else {
+                retryQueue.push(args[0]);
+            }
+            message.channel.send("Added URL to the retry list - will execute in the end.");
+        }
+        return;
     }
 
     const song = {
@@ -91,18 +110,33 @@ async function execute(message, args) {
     else {
         //add song to the queue
         serverQueue.songs.push(song);
-        return message.channel.send(`${serverQueue.songs.length}. **${song.title}** has been added to the queue!`);
+        if (text) message.channel.send(`${serverQueue.songs.length}. **${song.title}** has been added to the queue!`);
+        return;
     }
 }
 
-function executeRecursion(message, localUrls) {
+function executeRecursion(message, localUrls, retry) {
+    if (!(typeof retry === 'boolean')) {
+        retry = true;
+    }
     //test, if there are any more urls to add or not
     if ((!localUrls) || (!localUrls[0]) || (localUrls.length == 0)) {
-        return message.channel.send(`Finished loading ${message.member}!`);
+        retryQueue = retryQueues.get(message.guild.id);
+        if (retryQueue) {
+            if (retryQueue.length != 0) {
+                message.channel.send(`Start loading of retry queue ${message.member}: ${retryQueue.length} songs left.`);
+                executeRecursion(message, retryQueue, false);
+                return;
+            }
+            else {
+                retryQueues.delete(message.guild.id);
+            }
+        }
+        return message.channel.send(`Finished loading ${message.member} - final!`);
     }
-    execute(message, localUrls).then(function () {
+    execute(message, localUrls, false, retry).then(function () {
         localUrls.shift();
-        executeRecursion(message, localUrls);
+        executeRecursion(message, localUrls, retry);
     });
 }
 
@@ -199,7 +233,7 @@ function vol(message, args) {
         return message.channel.send("Current volume: " + serverQueue.volume);
     }
     //args: reset/r --> set volume to 5
-    if (args[0] == "r" || args[0] == "reset") {
+    if (args[0] == "r" || args[0] == "reset" || args[0] == "res") {
         args.shift();
         args.unshift("5");
     }
@@ -241,7 +275,7 @@ function count(message) {
 
 function clear(message) {
     //log every try in console
-    util.logInfo("Called 'clear' function.", "music: clear: log console", "User: " + message.member);
+    util.logInfo("Called 'clear' function.", "music: clear: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
 
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
@@ -688,23 +722,25 @@ function load(message, args) {
     }
     catch (err) {
         util.logUserError(err, "music: load: createFileInterface", message.member, "Parameter: " + util.arrToString(args, " "));
-        return message.channel.send("Could not load " + args[0] + ": Wrong name!");
+        return message.channel.send("Could not load " + args[0] + "!");
     }
 
-    //each line generates an event
-    readLineFile
-        .on("line", (line) => {
-            urls.get(message.guild.id).push(line);
-        })
-        .on("close", () => {
-            //initialize first song
-            executeRecursion(message, urls.get(message.guild.id));
-            message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
-        })
-        .on("error", (err) => {
+    try {
+        //each line generates an event
+        readLineFile
+            .on("line", (line) => {
+                urls.get(message.guild.id).push(line);
+            })
+            .on("close", () => {
+                //initialize first song
+                executeRecursion(message, urls.get(message.guild.id));
+                message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
+            });
+    }
+    catch (err) {
             util.logErr(err, "music: load: readLineFile", "Parameter: " + util.arrToString(args, " "));
             message.channel.send("Error while trying to add **" + args[0] + "** to the queue!");
-        });
+    };
 }
 
 function write(message, args) {

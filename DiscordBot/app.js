@@ -6,9 +6,231 @@ const client = new Discord.Client();
 const music = require('./musicModule.js');
 const fun = require('./funModule.js');
 const util = require('./Utility.js');
+const mod = require('./moderatorModule.js');
+
+//Define all commands as objects
+commands = [];
+function initCommands() {
+    commands.push({
+        names: ["help", "h"],
+        parameter: "<Module = all>",
+        description: "This menu",
+        module: "main",
+        func: function (message, args) { help(message, args); }
+    });
+    commands.push({
+        names: ["modules", "mod"],
+        parameter: "",
+        description: "List all modules",
+        module: "main",
+        func: function (message, args) { listModules(message); }
+    });
+    commands.push({
+        names: ["play", "add"],
+        parameter: "<YT-URL>",
+        description: "Add a song to the queue",
+        module: "music",
+        func: function (message, args) { music.execute(message, args); }
+    });
+    commands.push({
+        names: ["search"],
+        parameter: "<query, max = 5>",
+        description: "Search YouTube",
+        module: "music",
+        func: function (message, args) { music.search(message, args); }
+    });
+    commands.push({
+        names: ["playlist"],
+        parameter: "<YT-URL>",
+        description: "Add a YT-playlist to the queue",
+        module: "music",
+        func: function (message, args) { music.addPlaylist(message, args); }
+    });
+    commands.push({
+        names: ["pause", "p"],
+        parameter: "",
+        description: "Pause the current song",
+        module: "music",
+        func: function (message, args) { music.pause(message); }
+    });
+    commands.push({
+        names: ["resume", "res", "continue"],
+        parameter: "",
+        description: "Resume after paused",
+        module: "music",
+        func: function (message, args) { music.resume(message); }
+    });
+    commands.push({
+        names: ["skip", "s"],
+        parameter: "<int = 1>",
+        description: "Skip (multiple) songs",
+        module: "music",
+        func: function (message, args) { music.skip(message, args); }
+    });
+    commands.push({
+        names: ["unskip", "us"],
+        parameter: "<int = 1>",
+        description: "Unskip (multiple) songs",
+        module: "music",
+        func: function (message, args) { music.unskip(message, args); }
+    });
+    commands.push({
+        names: ["queue", "q"],
+        parameter: "<page = 1 | all>",
+        description: "List the queue",
+        module: "music",
+        func: function (message, args) { music.list(message, args); }
+    });
+    commands.push({
+        names: ["volume", "vol", "v"],
+        parameter: "[<float | res>]",
+        description: "Set/get the volume",
+        module: "music",
+        func: function (message, args) { music.vol(message, args); }
+    });
+    commands.push({
+        names: ["shuffle", "random", "randomize"],
+        parameter: "",
+        description: "Shuffle the queue",
+        module: "music",
+        func: function (message, args) { music.shuffle(message); }
+    });
+    commands.push({
+        names: ["looping", "loop"],
+        parameter: "[<true/false>]",
+        description: "Set/get looping status",
+        module: "music",
+        func: function (message, args) { music.setLooping(message, args); }
+    });
+    commands.push({
+        names: ["count", "c", "number"],
+        parameter: "",
+        description: "Show size of the queue",
+        module: "music",
+        func: function (message, args) { music.count(message); }
+    });
+    commands.push({
+        names: ["now", "np"],
+        parameter: "",
+        description: "Show what is on air",
+        module: "music",
+        func: function (message, args) { music.now(message); }
+    });
+    commands.push({
+        names: ["again", "replay", "rp"],
+        parameter: "",
+        description: "Play current song again",
+        module: "music",
+        func: function (message, args) { music.again(message); }
+    });
+    commands.push({
+        names: ["playnow", "playdirect", "force"],
+        parameter: "<YT-URL>",
+        description: "Add a song to the front of the queue and play it",
+        module: "music",
+        func: function (message, args) { music.playDirect(message, args); }
+    });
+    commands.push({
+        names: ["who", "requested"],
+        parameter: "",
+        description: "Show who added this song",
+        module: "music",
+        func: function (message, args) { music.requested(message); }
+    });
+    commands.push({
+        names: ["remove", "delete", "del"],
+        parameter: "<int = 1>",
+        description: "Remove song nr. from the queue",
+        module: "music",
+        func: function (message, args) { music.remove(message, args); }
+    });
+    commands.push({
+        names: ["duplicates", "removeDoubles"],
+        parameter: "",
+        description: "Remove all duplicates from queue",
+        module: "music",
+        func: function (message, args) { music.execute(message, args); }
+    });
+    commands.push({
+        names: ["clear", "cls"],
+        parameter: "",
+        description: "Clear the entire queue - FINAL!",
+        module: "music",
+        func: function (message, args) { music.clear(message); }
+    });
+    commands.push({
+        names: ["save", "write"],
+        parameter: "<name>",
+        description: "Attach the queue to a file",
+        module: "music",
+        func: function (message, args) { music.write(message, args); }
+    });
+    commands.push({
+        names: ["load", "l"],
+        parameter: "<name>",
+        description: "Attach songs from a file to the queue",
+        module: "music",
+        func: function (message, args) { music.load(message, args); }
+    });
+    commands.push({
+        names: ["ban"],
+        parameter: "<user, reason>",
+        description: "Ban a user!",
+        module: "moderator",
+        func: function (message, args) { mod.ban(message, args); }
+    });
+    commands.push({
+        names: ["purge"],
+        parameter: "<int>",
+        description: "Delete the last messages up to 200",
+        module: "moderator",
+        func: function (message, args) { mod.purge(message, args); }
+    });
+    commands.push({
+        names: ["rps"],
+        parameter: "<rock|paper|scissors>",
+        description: "Play against the bot!",
+        module: "fun",
+        func: function (message, args) { fun.rps(message, args); }
+    });
+    commands.push({
+        names: ["flip"],
+        parameter: "",
+        description: "Flip a coin",
+        module: "fun",
+        func: function (message, args) { fun.flip(message); }
+    });
+}
+
+//Define all modules as objects
+modules = [];
+function initModules() {
+    modules.push({
+        names: ["Main", "main"],
+        description: "MAIN MODULE"
+    });
+    modules.push({
+        names: ["Music", "music"],
+        description: "MUSIC MODULE"
+    });
+    modules.push({
+        names: ["Fun", "fun"],
+        description: "FUN MODULE"
+    });
+    modules.push({
+        names: ["Moderator", "moderator", "mod", "Mod"],
+        description: "MODERATOR MODULE - PERMISSIONS REQUIRED"
+    });
+}
 
 function listModules(message) {
-    return message.channel.send("Available modules: Main, Music, Fun.");
+    mods = "Available modules: " + modules[0].names[0];
+    for (i = 1; i < modules.length; i++) {
+        mods += ", ";
+        mods += modules[i].names[0];
+    }
+    mods += ".";
+    return message.channel.send(mods);
 }
 
 function help(message, args) {
@@ -16,17 +238,30 @@ function help(message, args) {
     if (args.length == 0) {
         args.push("all");
     }
-    //array of arrays of commands
-    commands = [];
-    //name array
-    names = [];
-
     //if listing all, do a certain order:
     if (args.find(function (elem) { return (elem == "all"); })) {
-        args = ["main", "music", "fun"];
+        args = [];
+        for (i = 0; i < modules.length; i++) {
+            args.push(modules[i].names[0]);
+        }
     }
-
-    //remove duplicates to avoid spam
+    //replace all inputs with the first name of the module --> unified names
+    for (i = 0; i < args.length; i++) {
+        found = false;
+        for (j = 0; j < modules.length && !found; j++) {
+            for (k = 0; k < modules[j].names.length && !found; k++) {
+                if (args[i] == modules[j].names[k]) {
+                    args[i] = modules[j].names[0];
+                    found = true;
+                }
+            }
+        }
+        if (!found) {
+            util.logUserError("User entered non-registered module", "main: help", message.member, "Current parameter: " + args[i] + " | All parameters: " + util.arrToString(args, " "));
+            return message.channel.send("Unknown module: " + util.arrToString(args, " "));
+        }
+    }
+    //remove duplicates to avoid spam (only list every module once)
     for (i = 0; i < args.length; i++) {
         for (j = i + 1; j < args.length; j++) {
             if (args[j] == args[i]) {
@@ -34,92 +269,74 @@ function help(message, args) {
             }
         }
     }
-    
-    for (i = 0; i < args.length; i++) {
-        moduleCommands = [];
-        switch (args[i]) {
-            case "Music":
-            case "music":
-                //add name to names array
-                names.push("MUSIC MODULE");
-                //list all music commands
-                moduleCommands.push({ name: "play <YT-URL>", description: "Add song to the queue", aliases: "add" });
-                moduleCommands.push({ name: "search <query, max = 5>", description: "Search for a query on YouTube", aliases: "" });
-                moduleCommands.push({ name: "playlist <YT-URL>", description: "Add a YT-playlist to the queue", aliases: "" });
-                moduleCommands.push({ name: "pause", description: "Pause the current song", aliases: "p" });
-                moduleCommands.push({ name: "resume", description: "Resume after paused", aliases: "res, continue" });
-                moduleCommands.push({ name: "skip <int = 1>", description: "Skip multiple songs", aliases: "s" });
-                moduleCommands.push({ name: "unskip <int = 1>", description: "Unskip multiple songs", aliases: "us" });
-                moduleCommands.push({ name: "queue <page = 1 | all>", description: "Show the queue", aliases: "q" });
-                moduleCommands.push({ name: "volume <float = 5.0>", description: "Set the volume", aliases: "vol, v" });
-                moduleCommands.push({ name: "shuffle", description: "Shuffle the queue", aliases: "random, randomize" });
-                moduleCommands.push({ name: "looping [<true/false>]", description: "Set/Get looping status", aliases: "loop" });
-                moduleCommands.push({ name: "count", description: "Show size of the queue", aliases: "c, number" });
-                moduleCommands.push({ name: "now", description: "Show what is currently being played", aliases: "np" });
-                moduleCommands.push({ name: "again", description: "Play current song again", aliases: "replay, rp" });
-                moduleCommands.push({ name: "playnow <YT-URL>", description: "Immediatly play a song", aliases: "playdirect, force" });
-                moduleCommands.push({ name: "who", description: "Show who requested this song", aliases: "requested" });
-                moduleCommands.push({ name: "remove <int = 1>", description: "Remove song Nr.", aliases: "delete, del" });
-                moduleCommands.push({ name: "duplicates", description: "Remove all duplicates from queue", aliases: "removeDoubles" });
-                moduleCommands.push({ name: "clear", description: "Clear the entire queue - FINAL!", aliases: "cls" });
-                moduleCommands.push({ name: "save <name>", description: "Attach the queue to a file", aliases: "write" });
-                moduleCommands.push({ name: "load <name>", description: "Attach songs from a file to the queue", aliases: "l" });
-                break;
-            case "Main":
-            case "main":
-            case "global":
-                //add name to names array
-                names.push("MAIN MODULE");
-                //list all main commands
-                moduleCommands.push({ name: "help <Module = all>", description: "This menu", aliases: "h" });
-                moduleCommands.push({ name: "modules", description: "List all modules", aliases: "mod" });
-                break;
-            case "Fun":
-            case "fun":
-                //add name to names array
-                names.push("FUN MODULE");
-                //list all main commands
-                moduleCommands.push({ name: "rps <rock|paper|scissors>", description: "Play against the bot!", aliases: "" });
-                moduleCommands.push({ name: "flip", description: "Flip a coin", aliases: "" });
-                break;
-            default:
-                util.logUserError("User entered non-registered module", "main: help", message.member, "Current parameter: " + args[i] + " | All parameters: " + util.arrToString(args, " "));
-                return message.channel.send("Unknown module: " + args[i]);
-        }
-        commands.push(moduleCommands);
+
+    //loop trough all functions to find biggest name + parameter & description
+    longestName = 0;
+    longestDesc = 0;
+    for (i = 0; i < commands.length; i++) {
+        name = commands[i].names[0];
+        name += " ";
+        name += commands[i].parameter;
+        longestName = Math.max(longestName, name.length);
+        longestDesc = Math.max(longestDesc, commands[i].description.length);
     }
 
-    //find longest name, description over all shown commands
-    nameSize = 0;
-    descSize = 0;
-    for (p = 0; p < commands.length; p++) {
-        for (i = 0; i < commands[p].length; i++) {
-            nameSize = Math.max(commands[p][i].name.length, nameSize)
-            descSize = Math.max(commands[p][i].description.length, descSize);
+    //loop trough all modules and compose individual blocks
+    for (a = 0; a < args.length; a++) {
+        i = 0;
+        foundModule = false;
+        for (j = 0; j < modules.length && !foundModule; j++) {
+            if (args[a] === modules[j].names[0]) {
+                i = j;
+                foundModule = true;
+            }
         }
-    }
-
-    //for every command array in commands, make a seperate paragraph
-    for (p = 0; p < commands.length; p++) {
-        //create command list
-        commandList = "```diff\n";
-        const name = "+ " + names[p] + " +\n";
-        commandList += name;
-        const cur = `+ Currently, there are ${commands[p].length} commands available +\n`;
-        commandList += cur;
-        commandList += util.trimString("Command <arguments>", nameSize + 3, " ");
-        commandList += util.trimString("Description", descSize + 3, " ");
-        commandList += "Aliases\n";
-        for (i = 0; i < commands[p].length; i++) {
-            commandList += util.trimString(commands[p][i].name, nameSize, " ");
-            commandList += " - ";
-            commandList += util.trimString(commands[p][i].description, descSize, " ");
-            commandList += " - ";
-            commandList += commands[p][i].aliases;
-            commandList += "\n";
+        if (!foundModule) {
+            util.logErr("Unknown module despite of testing!", "main: help: compose blocks", "None");
+            return message.channel.send("Something went terribly wrong :(");
         }
-        commandList += "```";
-        message.channel.send(commandList);
+        //head
+        text = "```diff\n"
+        text += "+ ";
+        text += modules[i].description;
+        text += " +\n+ Currently, there are ";
+        //count all commands that are attached to this module and contain them in a seperate text
+        list = "";
+        count = 0;
+        for (j = 0; j < commands.length; j++) {
+            found = false;
+            for (k = 0; k < modules[i].names.length && !found; k++) {
+                if (commands[j].module === modules[i].names[k]) {
+                    count++;
+                    found = true;
+                    name = commands[j].names[0];
+                    name += " ";
+                    name += commands[j].parameter;
+                    list += util.trimString(name, longestName);
+                    list += " - ";
+                    list += util.trimString(commands[j].description, longestDesc);
+                    list += " - ";
+                    if (commands[j].names.length >= 2) {
+                        list += commands[j].names[1];
+                        for (n = 2; n < commands[j].names.length; n++) {
+                            list += ", ";
+                            list += commands[j].names[n];
+                        }
+                    }
+                    list += "\n";
+                }
+            }
+        }
+        text += count;
+        text += " commands available +\n";
+        text += util.trimString("Command <arguments>", longestName + 3);
+        text += util.trimString("Description", longestDesc + 3);
+        text += "Aliases\n";
+        //attach command list
+        text += list;
+        text += "```";
+        //send text
+        message.channel.send(text);
     }
 }
 
@@ -149,117 +366,32 @@ client.on("message", async message => {
     args = args.filter(function (value, index, arr) { return (value != ""); });
     const first = args.shift();
 
-    switch (first) {
-        case "play":
-        case "add":
-            music.execute(message, args);
-            break;
-        case "skip":
-        case "s":
-            music.skip(message, args);
-            break;
-        case "unskip":
-        case "us":
-            music.unskip(message, args);
-            break;
-        case "pause":
-        case "p":
-            music.pause(message);
-            break;
-        case "queue":
-        case "q":
-            music.list(message, args);
-            break;
-        case "vol":
-        case "volume":
-        case "v":
-            music.vol(message, args);
-            break;
-        case "again":
-        case "replay":
-        case "rp":
-            music.again(message);
-            break;
-        case "looping":
-        case "loop":
-            music.setLooping(message, args);
-            break;
-        case "shuffle":
-        case "random":
-        case "randomize":
-            music.shuffle(message);
-            break;
-        case "now":
-        case "np":
-            music.now(message);
-            break;
-        case "remove":
-        case "delete":
-        case "del":
-            music.remove(message, args);
-            break;
-        case "resume":
-        case "res":
-        case "continue":
-            music.resume(message);
-            break;
-        case "save":
-        case "write":
-            music.write(message, args);
-            break;
-        case "load":
-        case "l":
-            music.load(message, args);
-            break;
-        case "clear":
-        case "cls":
-            music.clear(message);
-            break;
-        case "count":
-        case "c":
-        case "number":
-            music.count(message);
-            break;
-        case "who":
-        case "requested":
-            music.requested(message);
-            break;
-        case "duplicates":
-        case "removeDoubles":
-            music.removeDoubles(message);
-            break;
-        case "help":
-        case "h":
-            help(message, args);
-            break;
-        case "playnow":
-        case "playdirect":
-        case "force":
-            music.playDirect(message, args);
-            break;
-        case "search":
-            music.search(message, args);
-            break;
-        case "playlist":
-            music.addPlaylist(message, args);
-            break;
-        case "modules":
-        case "mod":
-            listModules(message);
-            break;
-        case "rps":
-            fun.rps(message, args);
-            break;
-        case "flip":
-            fun.flip(message, args);
-            break;
-        default:
-            args.unshift(first);
-            util.logUserError("User did not enter a valid command.", "main: message listener", message.member, "Parameter: " + util.arrToString(args, " "));
-            message.channel.send("Please enter a valid command!");
-            break;
+    //search commands for proper command
+    for (i = 0; i < commands.length; i++) {
+        for (j = 0; j < commands[i].names.length; j++) {
+            if (commands[i].names[j] === first) {
+                commands[i].func(message, args);
+                return;
+            }
+        }
     }
-
+    //no command found --> error
+    args.unshift(first);
+    util.logUserError("User did not enter a valid command.", "main: message listener", message.member, "Parameter: " + util.arrToString(args, " "));
+    message.channel.send("Please enter a valid command!");
 });
 
+// Create an event listener for new guild members
+client.on('guildMemberAdd', member => {
+    // Send the message to a designated channel on a server:
+    const channel = member.guild.channels.cache.find(ch => ch.name === 'dev-chat');
+    // Do nothing if the channel wasn't found on this server
+    if (!channel) return util.logErr("Did not find channel 'dev-chat' while trying to annouce new member!", "main: new member listener", "New user: " + member);
+    // Send the message, mentioning the member
+    return channel.send(`${member} is new on the server. <@688091839643123728> give them a role and a nickname!`);
+});
+
+//VERY IMPORTANT TO CALL THESE!!
+initCommands();
+initModules();
 client.login(token);

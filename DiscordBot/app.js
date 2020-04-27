@@ -12,6 +12,13 @@ const mod = require('./moderatorModule.js');
 commands = [];
 function initCommands() {
     commands.push({
+        names: ["info", "i"],
+        parameter: "",
+        description: "Get Bot info",
+        module: "main",
+        func: function (message, args) { info(message); }
+    });
+    commands.push({
         names: ["help", "h"],
         parameter: "<Module = all>",
         description: "This menu",
@@ -245,6 +252,20 @@ function listModules(message) {
     }
     mods += ".";
     return message.channel.send(mods);
+}
+
+function info(message) {
+    embed = new Discord.MessageEmbed();
+    embed.setColor('#1c061b');
+    embed.setTitle("Meme God - Info");
+    embed.addFields(
+        { name: 'GitHub', value: "https://github.com/Fractum34254/DiscordBot" },
+        { name: 'Add Bot to own server', value: "https://discordapp.com/api/oauth2/authorize?client_id=694262365608345671&scope=bot&permissions=8" }
+    );
+    embed.setThumbnail('https://imgur.com/ZL5kZpK.png')
+    embed.setFooter("Meme God Bot by Fractum#3592");
+    embed.setTimestamp();
+    message.channel.send(embed);
 }
 
 function help(message, args) {

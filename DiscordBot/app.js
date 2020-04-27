@@ -7,7 +7,6 @@ const music = require('./musicModule.js');
 const fun = require('./funModule.js');
 const util = require('./Utility.js');
 const mod = require('./moderatorModule.js');
-const main = require('./mainModule.js');
 
 //Define all commands as objects
 commands = [];
@@ -17,14 +16,14 @@ function initCommands() {
         parameter: "<Module = all>",
         description: "This menu",
         module: "main",
-        func: function (message, args) { main.help(message, args); }
+        func: function (message, args) { help(message, args); }
     });
     commands.push({
         names: ["modules", "mod"],
         parameter: "",
         description: "List all modules",
         module: "main",
-        func: function (message, args) { main.listModules(message); }
+        func: function (message, args) { listModules(message); }
     });
     commands.push({
         names: ["play", "add"],

@@ -81,6 +81,7 @@ function randomColor(message) {
         { name: 'RGB', value: r.toString(10) + " " + g.toString(10) + " " + b.toString(10), inline: true }
     );
     embed.setFooter("Meme God Bot by Fractum#3592");
+	embed.setTimestamp();
     message.channel.send(embed);
 }
 

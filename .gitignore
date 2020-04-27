@@ -10,6 +10,10 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Key file
+config.json
+/DiscordBot/config.json
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

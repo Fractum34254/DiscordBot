@@ -33,6 +33,9 @@
     <Compile Include="funModule.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="moderatorModule.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="musicModule.js">
       <SubType>Code</SubType>
     </Compile>

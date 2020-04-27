@@ -44,13 +44,18 @@ function purge(message, args) {
         return message.channel.send("You need to enter a parameter!");
     }
     if (isNaN(args[0])) {
-        util.logUserError("User entered invalid parameter.", "moderator: purge", message.member, "Parameters: " + util.arrToString(args, " "));
+        util.logUserError("User entered invalid parameter: no number.", "moderator: purge", message.member, "Parameters: " + util.arrToString(args, " "));
         return message.channel.send("Invalid parameter: " + args[0] + " is not a number!");
+    }
+    if (args[0] <= 0) {
+        util.logUserError("User entered invalid parameter: negative number / zero.", "moderator: purge", message.member, "Parameters: " + util.arrToString(args, " "));
+        return message.channel.send("Invalid parameter: " + args[0] + " is not positive!");
     }
     if (args[0] > 200) {
         util.logUserError("User wanted to delete more than 200 messages.", "moderator: purge", message.member, "Parameters: " + util.arrToString(args, " "));
         return message.channel.send(args[0] + " is bigger than the allowed amount (200)!");
     }
+    args[0] = parseInt(args[0], 10);
     try {
         message.channel.bulkDelete(args[0]).then(messages => {
             util.logInfo(`${message.member.user.tag} deleted  ${messages.size} messages in ${message.channel.name}.`, "moderator: purge", "Parameter: " + util.arrToString(args, " "));

@@ -403,6 +403,7 @@ function skip(message, args, looping) {
         util.logUserError("User tried to skip negative/zero songs", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Skipping negative/zero songs does not make any sense!");
     }
+    args[0] = parseInt(args[0], 10);
     //skipping too much
     if (args[0] > serverQueue.songs.length) {
         util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
@@ -469,6 +470,7 @@ function unskip(message, args) {
         util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
+    args[0] = parseInt(args[0], 10);
     //paused --> resume
     if (!serverQueue.playing) {
         resume(message);
@@ -677,6 +679,7 @@ function remove(message, args) {
         util.logUserError("User wanted to remove a song out of the queue", "music: remove", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
+    args[0] = parseInt(args[0], 10);
     try {
         //remove first song (special case)
         if (args[0] == 1) {
@@ -812,7 +815,7 @@ async function search(message, args) {
         return message.channel.send("You need to enter a query!");
     }
     //test for result number
-    if (isNaN(args[args.length - 1])) {
+    if ((args.length <= 1) || (isNaN(args[args.length - 1]))) {
         args.push("5");
     }
     results = args.pop();
@@ -823,7 +826,7 @@ async function search(message, args) {
     //try searching via ytsr
     var result;
     try {
-        result = await ytsr(util.arrToString(args, " "), { limit: results });
+        result = await ytsr(util.arrToString(args, " "), { limit: parseInt(results, 10) });
     }
     catch (err) {
         util.logErr(err, "music: search: await ytsr", "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);

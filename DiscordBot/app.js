@@ -68,6 +68,13 @@ function initCommands() {
         func: function (message, args) { music.resume(message); }
     });
     commands.push({
+        names: ["rejoin", "force"],
+        parameter: "",
+        description: "Rejoin your voice channel",
+        module: "music",
+        func: function (message, args) { music.rejoin(message); }
+    });
+    commands.push({
         names: ["skip", "s"],
         parameter: "<int = 1>",
         description: "Skip (multiple) songs",
@@ -82,8 +89,8 @@ function initCommands() {
         func: function (message, args) { music.unskip(message, args); }
     });
     commands.push({
-        names: ["queue", "q"],
-        parameter: "<page = 1 | all [,endPage]>",
+        names: ["q", "queue"],
+        parameter: "<page | all [,endPage]>",
         description: "List the queue",
         module: "music",
         func: function (message, args) { music.list(message, args); }
@@ -166,6 +173,13 @@ function initCommands() {
         func: function (message, args) { music.removeDoubles(message); }
     });
     commands.push({
+        names: ["finish", "end"],
+        parameter: "",
+        description: "End after current song - FINAL!",
+        module: "music",
+        func: function (message, args) { music.finish(message); }
+    });
+    commands.push({
         names: ["clear", "cls"],
         parameter: "",
         description: "Clear the entire queue - FINAL!",
@@ -182,7 +196,7 @@ function initCommands() {
     commands.push({
         names: ["load", "l"],
         parameter: "<name>",
-        description: "Attach songs from a file to the queue",
+        description: "Add songs from file to the queue",
         module: "music",
         func: function (message, args) { music.load(message, args); }
     });

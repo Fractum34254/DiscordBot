@@ -221,6 +221,55 @@ async function playDirect(message, args) {
     //play will annouce the song
 }
 
+async function rejoin(message) {
+    //log: something went wrong before
+    util.logInfo("Called 'rejoin' function.", "music: rejoin: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("No music playing while user tried bot to rejoin", "music: rejoin", message.member, "None");
+        return message.channel.send("Nothing is currently being played!");
+    }
+    //incorrect voice channel
+    voiceChannel = message.member.voice.channel;
+    if (!voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: rejoin", message.member, "None");
+        return message.channel.send("You need to be in a voice channel to let to bot rejoin!");
+    }
+    //no permissions
+    const permissions = voiceChannel.permissionsFor(message.client.user);
+    if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
+        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: rejoin", message.member, "None");
+        return message.channel.send("I need the permissions to join and speak in your voice channel!");
+    }
+    //leave former voice channel
+    try {
+        serverQueue.connection.disconnect();
+    }
+    catch (err) {
+        util.logErr(err, "music: rejoin: disconnect", "Unable to disconnect voice connection, continuing");
+    }
+    try {
+        serverQueue.voiceChannel.leave();
+    }
+    catch (err) {
+        util.logErr(err, "music: rejoin: leave channel", "Unable to leave voice channel, continuing");
+    }
+    serverQueue.voiceChannel = voiceChannel;
+    //try connecting to voiceChannel
+    var connection;
+    try {
+        connection = await voiceChannel.join();
+    }
+    catch (err) {
+        util.logErr(err, "music: rejoin: join VoiceChannel", "None");
+        return message.channel.send("Error while trying to join the voice channel.");
+    }
+    serverQueue.connection = connection;
+    message.channel.send("Successfully rejoined!");
+    play(message);
+}
+
 function vol(message, args) {
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
@@ -757,6 +806,7 @@ function load(message, args) {
     if (!urls.get(message.guild.id)) {
         urls.set(message.guild.id, []);
     }
+    preSize = urls.get(message.guild.id).length;
 
     //create stream interface
     var readLineFile = null;
@@ -779,7 +829,11 @@ function load(message, args) {
             .on("close", () => {
                 //initialize first song
                 executeRecursion(message, urls.get(message.guild.id));
-                message.channel.send("Adding **" + args[0] + "** to the queue, containing " + urls.get(message.guild.id).length + " songs!");
+                message.channel.send("Adding **" + args[0] + "** to the queue, containing " + (urls.get(message.guild.id).length - preSize) + " songs!");
+            })
+            .on("error", (err) => {
+                util.logErr(err, "music: load: readLineFile", "Parameter: " + util.arrToString(args, " "));
+                message.channel.send("Error while trying to add **" + args[0] + "** to the queue!");
             });
     }
     catch (err) {
@@ -940,6 +994,32 @@ async function addPlaylist(message, args) {
     executeRecursion(message, playlists.get(message.guild.id));
 }
 
+function finish(message) {
+    //almost equal to queue clearing --> log it!
+    util.logInfo("Called 'finish' function.", "music: finish: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("No music playing while user tried to finish queue", "music: finish", message.member, "None");
+        return message.channel.send("Nothing is currently being played!");
+    }
+    //incorrect voice channel
+    if (message.member.voice.channel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: finish", message.member, "None");
+        return message.channel.send("You need to be in the same voice channel as the bot to finish the queue!");
+    }
+    try {
+        first = serverQueue.songs.shift();
+        serverQueue.songs = [];
+        serverQueue.songs.push(first);
+    }
+    catch (err) {
+        util.logErr(err, "music: finish", "None");
+        return message.channel.send("An error occured while trying to finish the queue!");
+    }
+    return message.channel.send("Enjoy the last song!");
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -962,5 +1042,7 @@ module.exports = {
     playDirect: playDirect,
     search: search,
     addPlaylist: addPlaylist,
-    link: link
+    link: link,
+    finish: finish,
+    rejoin: rejoin
 }

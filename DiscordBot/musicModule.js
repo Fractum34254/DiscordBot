@@ -1008,6 +1008,10 @@ function finish(message) {
         util.logUserError("User was not connected to the correct voice channel", "music: finish", message.member, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to finish the queue!");
     }
+    //set looping off
+    if (serverQueue.looping) {
+        setLooping(message, ["false"]);
+    }
     try {
         first = serverQueue.songs.shift();
         serverQueue.songs = [];

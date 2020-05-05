@@ -154,26 +154,39 @@ function play(message) {
         return message.channel.send("End of queue reached!");
     }
     //play music!
-    serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' }))
-        .on("finish", () => {
-            const first = serverQueue.songs.shift();
-            if (serverQueue.looping) {
-                serverQueue.songs.push(first);
-            }
-            //Recursion
-            play(message);
-        })
-        .on("error", err => {
-            //log Error and inform users
-            util.logErr(err, "music: play: ytdl-stream", "URL: " + serverQueue.songs[0].url);
-            message.channel.send("Something went wrong while trying to play the song " + serverQueue.songs[0].title + ".\nContinuing to the next one");
-            //finish song (continue)
-            const first = serverQueue.songs.shift();
-            if (serverQueue.looping) {
-                serverQueue.songs.push(first);
-            }
-            play(message);
-        });
+    try {
+        serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' }))
+            .on("finish", () => {
+                const first = serverQueue.songs.shift();
+                if (serverQueue.looping) {
+                    serverQueue.songs.push(first);
+                }
+                //Recursion
+                play(message);
+            })
+            .on("error", err => {
+                //log Error and inform users
+                util.logErr(err, "music: play: ytdl-stream", "URL: " + serverQueue.songs[0].url);
+                message.channel.send("Something went wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
+                //finish song (continue)
+                const first = serverQueue.songs.shift();
+                if (serverQueue.looping) {
+                    serverQueue.songs.push(first);
+                }
+                play(message);
+            });
+    }
+    catch (err) {
+        //log Error and inform users
+        util.logErr(err, "music: play: ytdl-stream", "URL: " + serverQueue.songs[0].url);
+        message.channel.send("Something went terribly wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
+        //finish song (continue)
+        const first = serverQueue.songs.shift();
+        if (serverQueue.looping) {
+            serverQueue.songs.push(first);
+        }
+        play(message);
+    }
     serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
 }

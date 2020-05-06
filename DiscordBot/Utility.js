@@ -77,6 +77,25 @@ function trimString(str, length, token) {
     return str;
 }
 
+function trimStringFront(str, length, token) {
+    if (!token) {
+        token = " ";
+    }
+    if (str.length == length) {
+        return str;
+    }
+    if (str.length < length) {
+        while (str.length < length) {
+            str = token + str;
+        }
+        return str;
+    }
+    while (str.length > length) {
+        str = str.slice(1);
+    }
+    return str;
+}
+
 function arrToString(arr, spacing) {
     if (arr.length == 0) return "";
     if (!spacing) spacing = " ";
@@ -107,6 +126,15 @@ function hexToRgb(hex) {
     } : null;
 }
 
+function secondsToTimeString(sec) {
+    var min = 0;
+    while (sec >= 60) {
+        min++;
+        sec -= 60;
+    }
+    return (min + ":" + trimStringFront(sec.toString(10), 2, "0"));
+}
+
 module.exports =
     {
         logErr: logErr,
@@ -117,5 +145,6 @@ module.exports =
         writeLineToFile: writeLineToFile,
         arrToString: arrToString,
         rgbToHex: rgbToHex,
-        hexToRgb: hexToRgb
+        hexToRgb: hexToRgb,
+        secondsToTimeString: secondsToTimeString
     }

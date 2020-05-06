@@ -61,7 +61,7 @@ function initCommands() {
         func: function (message, args) { music.pause(message); }
     });
     commands.push({
-        names: ["resume", "res", "continue"],
+        names: ["resume", "res", "continue", "r"],
         parameter: "",
         description: "Resume after paused",
         module: "music",
@@ -129,6 +129,13 @@ function initCommands() {
         description: "Show what is on air",
         module: "music",
         func: function (message, args) { music.now(message); }
+    });
+    commands.push({
+        names: ["time", "t"],
+        parameter: "",
+        description: "Show song timer",
+        module: "music",
+        func: function (message, args) { music.time(message); }
     });
     commands.push({
         names: ["link"],

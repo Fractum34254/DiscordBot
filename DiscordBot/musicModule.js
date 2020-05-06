@@ -74,7 +74,10 @@ async function execute(message, args, text, retry) {
     const song = {
         title: songInfo.title,
         url: songInfo.video_url,
-        user: message.member
+        user: message.member,
+        length: songInfo.player_response.videoDetails.lengthSeconds,
+        startTime: undefined,
+        pauseStartTime: undefined
     };
 
     //Load ServerQueue
@@ -155,6 +158,7 @@ function play(message) {
     }
     //play music!
     try {
+        serverQueue.songs[0].startTime = Date.now();
         serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' }))
             .on("finish", () => {
                 const first = serverQueue.songs.shift();
@@ -713,6 +717,7 @@ function pause(message) {
         util.logErr(err, "music: pause: pause dispatcher", "None");
         return message.channel.send("Error while trying to pause the music. Maybe missing dispatcher object!");
     }
+    serverQueue.songs[0].pauseStartTime = Date.now();
     return message.channel.send("_Paused_");
 }
 
@@ -735,6 +740,9 @@ function resume(message) {
     }
     //set 'playing' to true
     serverQueue.playing = true;
+    //calculate correct timestamp
+    diff = Date.now() - serverQueue.songs[0].pauseStartTime;
+    serverQueue.songs[0].startTime += diff;
     //try to fire 'resume' event for dispatcher
     try {
         serverQueue.connection.dispatcher.resume();
@@ -1037,6 +1045,26 @@ function finish(message) {
     return message.channel.send("Enjoy the last song!");
 }
 
+function time(message) {
+    serverQueue = queues.get(message.guild.id);
+    //no serverQueue
+    if (!serverQueue) {
+        util.logUserError("No music playing while user tried to get song timestamp", "music: time", message.member, "None");
+        return message.channel.send("Nothing is currently being played!");
+    }
+    var curr;
+    //paused --> calculate time different
+    if (!serverQueue.playing) {
+        curr = serverQueue.songs[0].pauseStartTime - serverQueue.songs[0].startTime;
+    }
+    else {
+        curr = Date.now() - serverQueue.songs[0].startTime;
+    }
+    //to seconds
+    curr = Math.ceil(curr / 1000);
+    message.channel.send("Current song time: **" + util.secondsToTimeString(curr) + " min** of **" + util.secondsToTimeString(serverQueue.songs[0].length) + " min** song length!");
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -1061,5 +1089,6 @@ module.exports = {
     addPlaylist: addPlaylist,
     link: link,
     finish: finish,
-    rejoin: rejoin
+    rejoin: rejoin,
+    time: time
 }

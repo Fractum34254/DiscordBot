@@ -30,7 +30,7 @@ function ban(message, args) {
     }
     else {
         util.logUserError("User tried to ban an unknown user.", "moderator: ban", message.member, "Parameter: " + util.arrToString(args, " "));
-        return message.channel.send(`I didi not find a valid user in your statement!`);
+        return message.channel.send(`I did not find a valid user in your statement!`);
     }
 }
 
@@ -55,11 +55,11 @@ function purge(message, args) {
         util.logUserError("User wanted to delete more than 200 messages.", "moderator: purge", message.member, "Parameters: " + util.arrToString(args, " "));
         return message.channel.send(args[0] + " is bigger than the allowed amount (200)!");
     }
-    args[0] = parseInt(args[0], 10);
+    args[0] = parseInt(args[0], 10) + 1;
     try {
         message.channel.bulkDelete(args[0]).then(messages => {
-            util.logInfo(`${message.member.user.tag} deleted  ${messages.size} messages in ${message.channel.name}.`, "moderator: purge", "Parameter: " + util.arrToString(args, " "));
-            return message.channel.send(`Deleted ${messages.size} messages`);
+            util.logInfo(`${message.member.user.tag} deleted  ${messages.size-1} messages in ${message.channel.name}.`, "moderator: purge", "Parameter: " + util.arrToString(args, " "));
+            return message.channel.send(`Deleted ${messages.size - 1} messages`).then(msg => { msg.delete({ timeout: 5000})});
         });
     }
     catch (err) {

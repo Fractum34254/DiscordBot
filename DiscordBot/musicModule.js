@@ -70,13 +70,11 @@ async function execute(message, args, text, retry) {
         }
         return;
     }
-    const ldn = songInfo.player_response.playerConfig.audioConfig.perceptualLoudnessDb;
     const song = {
         title: songInfo.title,
         url: songInfo.video_url,
         user: message.member,
         length: songInfo.player_response.videoDetails.lengthSeconds,
-        loudness: ldn ? ldn : (-10.0),
         startTime: undefined,
         pauseStartTime: undefined
     };
@@ -192,7 +190,7 @@ function play(message) {
         }
         play(message);
     }
-    serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume * serverQueue.songs[0].loudness / (-50.0));
+    serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5.0);
     message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
 }
 
@@ -222,14 +220,12 @@ async function playDirect(message, args) {
         util.logErr(err, "music: playDirect: ytdl.getInfo", "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
     }
-
-    const ldn = songInfo.player_response.playerConfig.audioConfig.perceptualLoudnessDb;
+    
     const song = {
         title: songInfo.title,
         url: songInfo.video_url,
         user: message.member,
         length: songInfo.player_response.videoDetails.lengthSeconds,
-        loudness: ldn ? ldn : (-10.0),
         startTime: undefined,
         pauseStartTime: undefined
     };
@@ -326,7 +322,7 @@ function vol(message, args) {
     }
     serverQueue.volume = args[0];
     try {
-        serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume * serverQueue.songs[0].loudness / (-50.0));
+        serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5.0);
     }
     catch (err) {
         util.logErr(err, "music: vol: Set dispatcher volume", "Parameter: " + util.arrToString(args, " "));

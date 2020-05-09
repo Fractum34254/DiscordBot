@@ -223,10 +223,15 @@ async function playDirect(message, args) {
         return message.channel.send("YT-Downloader could not resolve this URL: **" + args[0] + "**");
     }
 
+    const ldn = songInfo.player_response.playerConfig.audioConfig.perceptualLoudnessDb;
     const song = {
         title: songInfo.title,
         url: songInfo.video_url,
-        user: message.member
+        user: message.member,
+        length: songInfo.player_response.videoDetails.lengthSeconds,
+        loudness: ldn ? ldn : (-10.0),
+        startTime: undefined,
+        pauseStartTime: undefined
     };
 
     //double unshift and then skip --> current song won't be pushed to the end of the queue

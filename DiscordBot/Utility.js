@@ -96,11 +96,12 @@ function trimStringFront(str, length, token) {
     return str;
 }
 
-function arrToString(arr, spacing) {
-    if (arr.length == 0) return "";
+function arrToString(arr, spacing, none) {
+    if (!none) none = "";
+    if (arr.length == 0) return none;
     if (!spacing) spacing = " ";
     str = arr[0];
-    for (i = 1; i < arr.length; i++) {
+    for (let i = 1; i < arr.length; i++) {
         str += spacing;
         str += arr[i];
     }

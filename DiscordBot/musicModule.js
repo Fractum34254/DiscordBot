@@ -169,7 +169,18 @@ function play(message) {
             })
             .on("error", err => {
                 //log Error and inform users
-                util.logErr(err, "music: play: ytdl-stream", "URL: " + serverQueue.songs[0].url);
+                util.logErr(err, "music: play: ytdl-stream: on error", "URL: " + serverQueue.songs[0].url);
+                message.channel.send("Something went wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
+                //finish song (continue)
+                const first = serverQueue.songs.shift();
+                if (serverQueue.looping) {
+                    serverQueue.songs.push(first);
+                }
+                play(message);
+            })
+            .on("warn", err => {
+                //log Error and inform users
+                util.logErr(err, "music: play: ytdl-stream: on warn", "URL: " + serverQueue.songs[0].url);
                 message.channel.send("Something went wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
                 //finish song (continue)
                 const first = serverQueue.songs.shift();
@@ -181,7 +192,7 @@ function play(message) {
     }
     catch (err) {
         //log Error and inform users
-        util.logErr(err, "music: play: ytdl-stream", "URL: " + serverQueue.songs[0].url);
+        util.logErr(err, "music: play: ytdl-stream: catch", "URL: " + serverQueue.songs[0].url);
         message.channel.send("Something went terribly wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
         //finish song (continue)
         const first = serverQueue.songs.shift();

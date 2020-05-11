@@ -517,26 +517,32 @@ client.once("disconnect", () => {
 });
 
 client.on("message", async message => {
-    if (!message.content.startsWith(prefix)) return;
+    try {
+        if (!message.content.startsWith(prefix)) return;
 
-    message.content = message.content.substr(1);
-    var args = message.content.split(" ");
-    args = args.filter(function (value, index, arr) { return (value != ""); });
-    const first = args.shift();
+        message.content = message.content.substr(1);
+        var args = message.content.split(" ");
+        args = args.filter(function (value, index, arr) { return (value != ""); });
+        const first = args.shift();
 
-    //search commands for proper command
-    for (i = 0; i < commands.length; i++) {
-        for (j = 0; j < commands[i].names.length; j++) {
-            if (commands[i].names[j] === first) {
-                commands[i].func(message, args);
-                return;
+        //search commands for proper command
+        for (i = 0; i < commands.length; i++) {
+            for (j = 0; j < commands[i].names.length; j++) {
+                if (commands[i].names[j] === first) {
+                    commands[i].func(message, args);
+                    return;
+                }
             }
         }
+        //no command found --> error
+        args.unshift(first);
+        util.logUserError("User did not enter a valid command.", "message listener", message.member, "Parameter: " + util.arrToString(args, " "));
+        message.channel.send("Please enter a valid command!");
     }
-    //no command found --> error
-    args.unshift(first);
-    util.logUserError("User did not enter a valid command.", "message listener", message.member, "Parameter: " + util.arrToString(args, " "));
-    message.channel.send("Please enter a valid command!");
+    catch (err) {
+        util.logErr(err, "message listener: final catch", "None");
+        message.channel.send("Something went absolutely wrong. Sorry!");
+    }
 });
 
 // Create an event listener for new guild members

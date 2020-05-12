@@ -158,15 +158,7 @@ function play(message) {
     //play music!
     try {
         serverQueue.songs[0].startTime = Date.now();
-        serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' }))
-            .on("finish", () => {
-                const first = serverQueue.songs.shift();
-                if (serverQueue.looping) {
-                    serverQueue.songs.push(first);
-                }
-                //Recursion
-                play(message);
-            })
+        serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' })
             .on("error", err => {
                 //log Error and inform users
                 util.logErr(err, "music: play: ytdl-stream: on error", "URL: " + serverQueue.songs[0].url);
@@ -177,10 +169,18 @@ function play(message) {
                     serverQueue.songs.push(first);
                 }
                 play(message);
+            }))
+            .on("finish", () => {
+                const first = serverQueue.songs.shift();
+                if (serverQueue.looping) {
+                    serverQueue.songs.push(first);
+                }
+                //Recursion
+                play(message);
             })
-            .on("warn", err => {
+            .on("error", err => {
                 //log Error and inform users
-                util.logErr(err, "music: play: ytdl-stream: on warn", "URL: " + serverQueue.songs[0].url);
+                util.logErr(err, "music: play: connection.play: on error", "URL: " + serverQueue.songs[0].url);
                 message.channel.send("Something went wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
                 //finish song (continue)
                 const first = serverQueue.songs.shift();
@@ -846,7 +846,10 @@ function load(message, args) {
     var readLineFile = null;
     try {
         readLineFile = objLine.createInterface({
-            input: fs.createReadStream(pathName + args[0])
+            input: fs.createReadStream(pathName + args[0]).on('error', err => {
+                util.logUserError(err, "music: load: fs.createReadStream error handler", message.member, "Parameter: " + util.arrToString(args, " "));
+                return message.channel.send("Could not load " + args[0] + "!");
+            })
         });
     }
     catch (err) {

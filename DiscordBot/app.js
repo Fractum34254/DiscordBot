@@ -8,6 +8,11 @@ const fun = require('./funModule.js');
 const util = require('./Utility.js');
 const mod = require('./moderatorModule.js');
 
+//Error handling - last instance
+process.on('uncaughtException', (err, origin) => {
+    return util.logErr(err, "main: uncaughtException handler", origin);
+});
+
 //Define all commands as objects
 commands = [];
 {
@@ -17,7 +22,7 @@ commands = [];
         description: "Get Bot info",
         longDescription: "Lists the GitHub link to the source code and provides a link so you can add the bot to your own server.",
         module: "main",
-        func: function (message, args) { info(message); }
+        func: function (message, args) { return info(message); }
     });
     commands.push({
         names: ["help", "h"],
@@ -26,7 +31,7 @@ commands = [];
         longDescription: "If you enter a module, this command shows all affiliated commands in a list.\nIf you enter a command, an info embed will pop up.\nYou can enter multiple modules/commands (also mixed together) by separating them with spaces.\nDefaults to 'all', which lists all commands.",
         example: "?help main music purge ban",
         module: "main",
-        func: function (message, args) { help(message, args); }
+        func: function (message, args) { return help(message, args); }
     });
     commands.push({
         names: ["modules", "mod"],
@@ -34,7 +39,7 @@ commands = [];
         description: "List all modules",
         longDescription: "Lists all available modules you can request via the help function.",
         module: "main",
-        func: function (message, args) { listModules(message); }
+        func: function (message, args) { return listModules(message); }
     });
     commands.push({
         names: ["play", "add"],
@@ -43,7 +48,7 @@ commands = [];
         longDescription: "Adds a song to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
         example: "?play https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         module: "music",
-        func: function (message, args) { music.execute(message, args); }
+        func: function (message, args) { return music.execute(message, args); }
     });
     commands.push({
         names: ["search"],
@@ -52,7 +57,7 @@ commands = [];
         longDescription: "Lists the first results of a youtube search.\nIf you enter a number as last argument, the function takes this as the number of results it will show. Default is 5.",
         example: "?search PlanetChili Hardware 3D 3\n>> Outputs the first 3 results for this query.",
         module: "music",
-        func: function (message, args) { music.search(message, args); }
+        func: function (message, args) { return music.search(message, args); }
     });
     commands.push({
         names: ["playlist"],
@@ -61,7 +66,7 @@ commands = [];
         longDescription: "Adds an entire YouTube-playlist to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
         example: "?playlist https://www.youtube.com/playlist?list=PL2GCi6aTvU1I5fcBnHQuE1-Cbw-9zXGqb",
         module: "music",
-        func: function (message, args) { music.addPlaylist(message, args); }
+        func: function (message, args) { return music.addPlaylist(message, args); }
     });
     commands.push({
         names: ["pause", "p"],
@@ -69,7 +74,7 @@ commands = [];
         description: "Pause",
         longDescription: "Immediatly pauses the music. Type '?resume' to continue.",
         module: "music",
-        func: function (message, args) { music.pause(message); }
+        func: function (message, args) { return music.pause(message); }
     });
     commands.push({
         names: ["resume", "res", "continue", "r"],
@@ -77,7 +82,7 @@ commands = [];
         description: "Resume",
         longDescription: "Use this to continue playing after the music is paused.",
         module: "music",
-        func: function (message, args) { music.resume(message); }
+        func: function (message, args) { return music.resume(message); }
     });
     commands.push({
         names: ["rejoin"],
@@ -85,7 +90,7 @@ commands = [];
         description: "Rejoin voice channel",
         longDescription: "If the bot drops out due to unknown reasons, try this to bring it back in.\nDespite best effort, this function often does not help.",
         module: "music",
-        func: function (message, args) { music.rejoin(message); }
+        func: function (message, args) { return music.rejoin(message); }
     });
     commands.push({
         names: ["skip", "s"],
@@ -94,7 +99,7 @@ commands = [];
         longDescription: "Skip one or more songs. The parameter dictates how many songs you will be skipping.",
         example: "?skip 3",
         module: "music",
-        func: function (message, args) { music.skip(message, args); }
+        func: function (message, args) { return music.skip(message, args); }
     });
     commands.push({
         names: ["unskip", "us"],
@@ -103,7 +108,7 @@ commands = [];
         longDescription: "Skipped too much? Bot wasn't able to play the song? Unskip multiple songs to bring the back of the queue in front.",
         example: "?unskip 2",
         module: "music",
-        func: function (message, args) { music.unskip(message, args); }
+        func: function (message, args) { return music.unskip(message, args); }
     });
     commands.push({
         names: ["queue", "q"],
@@ -112,7 +117,7 @@ commands = [];
         longDescription: "List pages of the queue. A page contains 10 songs. Default is one.\nTo list the entire queue, enter 'all'.",
         example: "?queue 3 5\n>> Shows page 3 to 5.",
         module: "music",
-        func: function (message, args) { music.list(message, args); }
+        func: function (message, args) { return music.list(message, args); }
     });
     commands.push({
         names: ["volume", "vol", "v"],
@@ -121,7 +126,7 @@ commands = [];
         longDescription: "If you enter a number, this function sets the volume to this number.\nIf no number is entered, returns the active volume.\nIf you enter 'res', sets default (5).",
         example: "?volume 3",
         module: "music",
-        func: function (message, args) { music.vol(message, args); }
+        func: function (message, args) { return music.vol(message, args); }
     });
     commands.push({
         names: ["shuffle", "random", "randomize"],
@@ -129,7 +134,7 @@ commands = [];
         description: "Shuffle",
         longDescription: "Change your monotone playlist to enjoy a better mix!",
         module: "music",
-        func: function (message, args) { music.shuffle(message); }
+        func: function (message, args) { return music.shuffle(message); }
     });
     commands.push({
         names: ["looping", "loop"],
@@ -137,7 +142,7 @@ commands = [];
         description: "Set/get looping status",
         longDescription: "Looping determines whether a played song is discarded or added at the end of the queue.\nEnter 'true' or 'false' to set the looping status. If no parameter is entered, returns the active status. Default is true.",
         module: "music",
-        func: function (message, args) { music.setLooping(message, args); }
+        func: function (message, args) { return music.setLooping(message, args); }
     });
     commands.push({
         names: ["count", "c", "number"],
@@ -145,7 +150,7 @@ commands = [];
         description: "Count songs",
         longDescription: "Counts, how many songs there are in queue.",
         module: "music",
-        func: function (message, args) { music.count(message); }
+        func: function (message, args) { return music.count(message); }
     });
     commands.push({
         names: ["now", "np"],
@@ -153,7 +158,7 @@ commands = [];
         description: "Show what is live",
         longDescription: "Returns the title of the songs that is currently being played. To get a link, type '?link'.\nTo get who added the song, type '?who'.",
         module: "music",
-        func: function (message, args) { music.now(message); }
+        func: function (message, args) { return music.now(message); }
     });
     commands.push({
         names: ["time", "t"],
@@ -161,7 +166,7 @@ commands = [];
         description: "Show song timer",
         longDescription: "Displays the elapsed time of the song as well as the entire song length.",
         module: "music",
-        func: function (message, args) { music.time(message); }
+        func: function (message, args) { return music.time(message); }
     });
     commands.push({
         names: ["link"],
@@ -170,7 +175,7 @@ commands = [];
         longDescription: "Returns the link of a song. Your parameter specifies, which one: enter a queue position. Defaults to the current song (1).",
         example: "?link 3",
         module: "music",
-        func: function (message, args) { music.link(message, args); }
+        func: function (message, args) { return music.link(message, args); }
     });
     commands.push({
         names: ["again", "replay", "rp"],
@@ -178,7 +183,7 @@ commands = [];
         description: "Restart song",
         longDescription: "Rewind time and start playing the currently live song again.",
         module: "music",
-        func: function (message, args) { music.again(message); }
+        func: function (message, args) { return music.again(message); }
     });
     commands.push({
         names: ["playnow", "playdirect", "force"],
@@ -187,7 +192,7 @@ commands = [];
         longDescription: "Pushes URL to the front of the queue, ends current track (will then be 2nd place in the queue) and starts playing this requested song.",
         example: "?playnow https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         module: "music",
-        func: function (message, args) { music.playDirect(message, args); }
+        func: function (message, args) { return music.playDirect(message, args); }
     });
     commands.push({
         names: ["who", "requested"],
@@ -195,7 +200,7 @@ commands = [];
         description: "Who added this?",
         longDescription: "Displays and tags the user who added the song that is currently being played.",
         module: "music",
-        func: function (message, args) { music.requested(message); }
+        func: function (message, args) { return music.requested(message); }
     });
     commands.push({
         names: ["remove", "delete", "del"],
@@ -204,7 +209,7 @@ commands = [];
         longDescription: "Completely deletes a song from the queue. Your parameter is the queue position, the default is the song that is live.\nAttention if you want to remove multiple songs: This shifts songs that were positioned after this song one place to the front. To be safe, remove songs in descending order.",
         example: "?remove 3",
         module: "music",
-        func: function (message, args) { music.remove(message, args); }
+        func: function (message, args) { return music.remove(message, args); }
     });
     commands.push({
         names: ["duplicates", "removeDoubles"],
@@ -212,7 +217,7 @@ commands = [];
         description: "Remove duplicates",
         longDescription: "Removes all songs with the same URL from the queue.",
         module: "music",
-        func: function (message, args) { music.removeDoubles(message); }
+        func: function (message, args) { return music.removeDoubles(message); }
     });
     commands.push({
         names: ["finish", "end"],
@@ -220,7 +225,7 @@ commands = [];
         description: "End playing - FINAL!",
         longDescription: "Deletes queue but keeps the first song. As result, the active song will play to the end and then the bot will stop.",
         module: "music",
-        func: function (message, args) { music.finish(message); }
+        func: function (message, args) { return music.finish(message); }
     });
     commands.push({
         names: ["clear", "cls"],
@@ -228,7 +233,7 @@ commands = [];
         description: "Delete all - FINAL!",
         longDescription: "Removes everything, ends currently playing track and drops out of the voice channel.",
         module: "music",
-        func: function (message, args) { music.clear(message); }
+        func: function (message, args) { return music.clear(message); }
     });
     commands.push({
         names: ["save", "write"],
@@ -236,7 +241,7 @@ commands = [];
         description: "Save queue",
         longDescription: "If there is no save with this name, creates a new file and writes the URLs.\nIf there is a save with this name, adds the URLs to that save.",
         module: "music",
-        func: function (message, args) { music.write(message, args); }
+        func: function (message, args) { return music.write(message, args); }
     });
     commands.push({
         names: ["load", "l"],
@@ -245,7 +250,7 @@ commands = [];
         longDescription: "Loads a previously saved file. Adds all songs to the queue (does not delete it).",
         example: "?load music",
         module: "music",
-        func: function (message, args) { music.load(message, args); }
+        func: function (message, args) { return music.load(message, args); }
     });
     commands.push({
         names: ["ban"],
@@ -253,7 +258,7 @@ commands = [];
         description: "Ban a user!",
         longDescription: "Bans a user from the entire Discord Server. You need the permissions to evoke this command.",
         module: "moderator",
-        func: function (message, args) { mod.ban(message, args); }
+        func: function (message, args) { return mod.ban(message, args); }
     });
     commands.push({
         names: ["purge"],
@@ -261,7 +266,7 @@ commands = [];
         description: "Delete messages",
         longDescription: "Deletes the last messages, you can enter up to 200. You need the permission to manage messages.",
         module: "moderator",
-        func: function (message, args) { mod.purge(message, args); }
+        func: function (message, args) { return mod.purge(message, args); }
     });
     commands.push({
         names: ["rps"],
@@ -269,7 +274,7 @@ commands = [];
         description: "Play against the bot!",
         longDescription: "Plays rock, paper, scissors against the bot.",
         module: "fun",
-        func: function (message, args) { fun.rps(message, args); }
+        func: function (message, args) { return fun.rps(message, args); }
     });
     commands.push({
         names: ["flip"],
@@ -277,7 +282,7 @@ commands = [];
         description: "Flip a coin",
         longDescription: "Will result in Heads (50%) or Tails (50%). If you need to make a decision...",
         module: "fun",
-        func: function (message, args) { fun.flip(message); }
+        func: function (message, args) { return fun.flip(message); }
     });
     commands.push({
         names: ["randomColor", "randColor", "randomRGB", "randomcolor"],
@@ -285,7 +290,7 @@ commands = [];
         description: "Get a random color",
         longDescription: "Displays an embed filled with RGB and hex code to a random color.",
         module: "fun",
-        func: function (message, args) { fun.randomColor(message); }
+        func: function (message, args) { return fun.randomColor(message); }
     });
 }
 
@@ -540,8 +545,8 @@ client.on("message", async message => {
         message.channel.send("Please enter a valid command!");
     }
     catch (err) {
-        util.logErr(err, "message listener: final catch", "None");
-        message.channel.send("Something went absolutely wrong. Sorry!");
+        util.logErr(err, "message listener: final catch embrace", "None");
+        message.channel.send("Something in the message listener went wrong.");
     }
 });
 

@@ -125,6 +125,10 @@ async function execute(message, args, text, retry) {
         play(message);
     }
     else {
+        if (voiceChannel != serverQueue.voiceChannel) {
+            util.logUserError("User was not connected to the correct voice channel", "music: execute", message.author, "Parameter: " + util.arrToString(args, " "));
+            return message.channel.send("You need to be in the same voice channel as the bot to add songs!");
+        }
         //add song to the queue
         serverQueue.songs.push(song);
         if (text) message.channel.send(`${serverQueue.songs.length}. **${song.title}** has been added to the queue!`);
@@ -1280,13 +1284,13 @@ async function addPlaylist(message, args) {
 }
 
 function finish(message) {
+    //almost equal to queue clearing --> log it!
+    util.logInfo("Called 'finish' function.", "music: finish: log console", "User: " + message.author.tag + " (" + message.member.nickname + ")");
     //check for guild --> no DMs allowed!
     if (!message.guild) {
         util.logUserError("User was not in a guild: command executed in DM", "music: finish", message.author, "None");
         return message.channel.send("You have to be in a server channel to finish playing, DMs are not allowed!");
     }
-    //almost equal to queue clearing --> log it!
-    util.logInfo("Called 'finish' function.", "music: finish: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {

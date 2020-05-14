@@ -12,14 +12,15 @@ const mod = require('./moderatorModule.js');
 process.on('uncaughtException', (err, origin) => {
     // inform Devs on origin server
     // Send the message to a designated channel on the server:
-    const channel = client.guilds.get('688081153361576013').channels.cache.find(ch => ch.name === 'dev-chat');
+    const guild = client.guilds.resolve('688081153361576013');
+    const channel = guild.channels.cache.find(ch => ch.name === 'dev-chat');
     // Do nothing if the channel wasn't found on this server
     if (!channel) {
         util.logErr("Did not find channel 'dev-chat' while trying to inform about crash!", "main: uncaughtException listener", "You missed an exception case somewhere!");
     }
     else {
         // Send the message, mentioning the Devs
-        channel.send(`The bot caught an horrible exception. <@688091839643123728>s check the console!`);
+        channel.send(`The bot caught an horrible exception. ${guild.roles.resolve('688091839643123728')}s check the console!`);
     }
     return util.logErr(err, "main: uncaughtException handler", origin);
 });
@@ -262,6 +263,15 @@ commands = [];
         example: "?load music",
         module: "music",
         func: function (message, args) { return music.load(message, args); }
+    });
+    commands.push({
+        names: ["loadShuffled", "ls"],
+        parameter: "<name>",
+        description: "Load songs shuffled",
+        longDescription: "Loads a previously saved file. Adds all songs to the queue (does not delete it). Shuffles them before adding.",
+        example: "?ls music",
+        module: "music",
+        func: function (message, args) { return music.loadShuffled(message, args); }
     });
     commands.push({
         names: ["ban"],

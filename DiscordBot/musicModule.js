@@ -786,7 +786,7 @@ function list(message, args) {
         return message.channel.send("You need to enter a valid number as first parameter!");
     }
     if ((args.length == 1) && (args[0] != "all")) {
-        args.push((parseInt(args[0]) + 1).toString(10));
+        args.push(args[0]);
     }
     //incorrect parameter (no number)
     if (isNaN(args[1]) && (args[0] != "all")) {
@@ -820,20 +820,20 @@ function list(message, args) {
             util.logUserError("User did not enter a valid parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue length: " + serverQueue.songs.length);
             return message.channel.send("Your first page number is too big! There are only " + serverQueue.songs.length + " songs in queue.");
         }
-        if (args[1] <= args[0]) {
+        if (args[1] < args[0]) {
             util.logUserError("User did not enter a valid parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
-            return message.channel.send("Your second parameter needs to be bigger than the first one!");
+            return message.channel.send("Your second parameter needs to be bigger than or equal to the first one!");
         }
         try {
             text = "";
-            for (i = 10 * (args[0] - 1); i < serverQueue.songs.length && i < 10 * (args[1] - 1); i++) {
+            for (i = 10 * (args[0] - 1); i < serverQueue.songs.length && i < 10 * (args[1]); i++) {
                 text += (++i + ". **" + serverQueue.songs[--i].title + "**\n");
             }
             message.channel.send(text);
         }
         catch (err) {
             util.logErr(err, "music: list: display page", "Parameter: " + util.arrToString(args, " "));
-            message.channel.send("Something went wrong while displaying page " + args[0] + " of the queue.");
+            message.channel.send("Something went wrong while displaying page " + args[0] + " to " + args[1] + " of the queue.");
         }
     }
 }

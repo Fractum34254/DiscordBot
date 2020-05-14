@@ -465,6 +465,10 @@ function now(message) {
         util.logUserError("No server queue while user tried to display current song", "music: now", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
+    //paused
+    if (!serverQueue.playing) {
+        message.channel.send("Music is paused.");
+    }
     return message.channel.send(`Currently live: **${serverQueue.songs[0].title}**!`);
 }
 
@@ -1343,6 +1347,7 @@ function time(message) {
     //paused --> calculate time different
     if (!serverQueue.playing) {
         curr = serverQueue.songs[0].pauseStartTime - serverQueue.songs[0].startTime;
+        message.channel.send("Music is paused at the moment.");
     }
     else {
         curr = Date.now() - serverQueue.songs[0].startTime;

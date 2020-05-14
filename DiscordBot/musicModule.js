@@ -424,6 +424,17 @@ function clear(message) {
         return message.channel.send("You have to be in a server channel to clear the queue, DMs are not allowed!");
     }
 
+    //clear loading queue
+    if (urls.get(message.guild.id)) {
+        urls.delete(message.guild.id);
+        message.channel.send("Deleted loading queue.");
+    }
+    //clear retry queue
+    if (retryQueues.get(message.guild.id)) {
+        retryQueues.delete(message.guild.id);
+        message.channel.send("Deleted retry queue.");
+    }
+
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
@@ -1318,6 +1329,16 @@ function finish(message) {
     //set looping off
     if (serverQueue.looping) {
         setLooping(message, ["false"]);
+    }
+    //clear loading queue
+    if (urls.get(message.guild.id)) {
+        urls.delete(message.guild.id);
+        message.channel.send("Deleted loading queue.");
+    }
+    //clear retry queue
+    if (retryQueues.get(message.guild.id)) {
+        retryQueues.delete(message.guild.id);
+        message.channel.send("Deleted retry queue.");
     }
     try {
         first = serverQueue.songs.shift();

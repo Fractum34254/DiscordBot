@@ -1103,6 +1103,77 @@ function load(message, args) {
     };
 }
 
+function loadShuffled(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: loadShuffled", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to load songs to the queue, DMs are not allowed!");
+    }
+    //no parameter
+    if (args.length == 0) {
+        util.logUserError("User tried to load from file without parameter.", "music: loadShuffled", message.author, "None");
+        return message.channel.send("Missing parameter: Which file should I load?");
+    }
+    //incorrect voice channel
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: loadShuffled: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not load songs via DM!");
+    }
+    if (!voiceChannel) {
+        util.logUserError("User was not connected to a voice channel", "music: loadShuffled", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You need to be in a voice channel to attach songs from a file to the queue!");
+    }
+
+    //check if there is already an url-array for this guild
+    if (!urls.get(message.guild.id)) {
+        urls.set(message.guild.id, []);
+    }
+    preSize = urls.get(message.guild.id).length;
+
+    //create stream interface
+    var readLineFile = null;
+    try {
+        readLineFile = objLine.createInterface({
+            input: fs.createReadStream(pathName + args[0]).on('error', err => {
+                util.logUserError(err, "music: loadShuffled: fs.createReadStream error handler", message.author, "Parameter: " + util.arrToString(args, " "));
+                return message.channel.send("Could not load " + args[0] + "!");
+            })
+        });
+    }
+    catch (err) {
+        util.logUserError(err, "music: loadShuffled: createFileInterface", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("Could not load " + args[0] + "!");
+    }
+
+    try {
+        //each line generates an event
+        readLineFile
+            .on("line", (line) => {
+                urls.get(message.guild.id).push(line);
+            })
+            .on("close", () => {
+                //shuffle url queue
+                urls.set(message.guild.id, util.randomize(urls.get(message.guild.id)));
+                //initialize first song
+                executeRecursion(message, urls.get(message.guild.id));
+                message.channel.send("Adding **" + args[0] + "** to the queue, containing " + (urls.get(message.guild.id).length - preSize) + " songs!");
+            })
+            .on("error", (err) => {
+                util.logErr(err, "music: loadShuffled: readLineFile", "Parameter: " + util.arrToString(args, " "));
+                message.channel.send("Error while trying to add **" + args[0] + "** to the queue!");
+            });
+    }
+    catch (err) {
+        util.logErr(err, "music: loadShuffled: readLineFile", "Parameter: " + util.arrToString(args, " "));
+        message.channel.send("Error while trying to add **" + args[0] + "** to the queue!");
+    };
+}
+
 function write(message, args) {
     //check for guild --> no DMs allowed!
     if (!message.guild) {
@@ -1394,6 +1465,7 @@ module.exports = {
     resume: resume,
     remove: remove,
     load: load,
+    loadShuffled: loadShuffled,
     write: write,
     requested: requested,
     removeDoubles: removeDoubles,

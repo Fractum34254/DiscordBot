@@ -6,7 +6,7 @@ const objLine = require('readline');
 
 function logErr(err, position, info) {
     var cDate = new Date();
-    console.log("\n------------[ERROR]------------");
+    console.log('\n------------\x1b[31m%s\x1b[0m------------', '[ERROR]');
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(err);
     console.log("[Additional Information] " + info);
@@ -15,7 +15,7 @@ function logErr(err, position, info) {
 
 function logInfo(info, position, addInfo) {
     var cDate = new Date();
-    console.log("\n------------[INFO]------------");
+    console.log("\n------------\x1b[32m%s\x1b[0m------------", "[INFO]");
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(info);
     console.log("[Additional Information] " + addInfo);
@@ -24,7 +24,7 @@ function logInfo(info, position, addInfo) {
 
 function logUserError(warn, position, user, info) {
     var cDate = new Date();
-    console.log("\n------------[USER ERROR]------------");
+    console.log("\n------------\x1b[33m%s\x1b[0m------------", "[USER ERROR]");
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user.tag  + "\n[MESSAGE]");
     console.log(warn);
     console.log("[Additional Information] " + info);

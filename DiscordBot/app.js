@@ -10,6 +10,17 @@ const mod = require('./moderatorModule.js');
 
 //Error handling - last instance
 process.on('uncaughtException', (err, origin) => {
+    // inform Devs on origin server
+    // Send the message to a designated channel on the server:
+    const channel = client.guilds.get('688081153361576013').channels.cache.find(ch => ch.name === 'dev-chat');
+    // Do nothing if the channel wasn't found on this server
+    if (!channel) {
+        util.logErr("Did not find channel 'dev-chat' while trying to inform about crash!", "main: uncaughtException listener", "You missed an exception case somewhere!");
+    }
+    else {
+        // Send the message, mentioning the Devs
+        channel.send(`The bot caught an horrible exception. <@688091839643123728>s check the console!`);
+    }
     return util.logErr(err, "main: uncaughtException handler", origin);
 });
 

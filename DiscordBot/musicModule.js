@@ -28,17 +28,32 @@ async function execute(message, args, text, retry) {
     if (!(typeof retry === 'boolean')) {
         retry = false;
     }
+
+    //check for guild --> no DMs allowed!
+    //might add later: check every guild in 'queues' if the user is member there
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: execute", message.author, "None");
+        return message.channel.send("You have to be in a server channel to add songs, DMs are not allowed!");
+    }
+
     //check for parameters
     if (args.length == 0) {
-        util.logUserError("Found no YT-URL in 'play'-statement", "music: execute", message.member, "None");
+        util.logUserError("Found no YT-URL in 'play'-statement", "music: execute", message.author, "None");
         return message.channel.send("Missing arguments: No URL!");
     }
 
+    let voiceChannel = null;
     //check for voiceChannel
-    const voiceChannel = message.member.voice.channel;
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: execute: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not add songs via DM!");
+    }
 
     if (!voiceChannel) {
-        util.logUserError("User was not connected to a voice channel", "music: execute", message.member, "URL: " + args[0]);
+        util.logUserError("User was not connected to a voice channel", "music: execute", message.author, "URL: " + args[0]);
         return message.channel.send("You need to be in a voice channel to play music!");
     }
 
@@ -46,7 +61,7 @@ async function execute(message, args, text, retry) {
     const permissions = voiceChannel.permissionsFor(message.client.user);
 
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.member, "URL: " + args[0]);
+        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: execute", message.author, "URL: " + args[0]);
         return message.channel.send("I need the permissions to join and speak in your voice channel!");
     }
 
@@ -206,6 +221,11 @@ function play(message) {
 }
 
 async function playDirect(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: playDirect", message.author, "None");
+        return message.channel.send("You have to be in a server channel to play a song, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue --> Execute
     if (!serverQueue) {
@@ -213,13 +233,20 @@ async function playDirect(message, args) {
     }
     //check for parameters
     if (args.length == 0) {
-        util.logUserError("Found no YT-URL in 'playDirect'-statement", "music: playDirect", message.member, "None");
+        util.logUserError("Found no YT-URL in 'playDirect'-statement", "music: playDirect", message.author, "None");
         return message.channel.send("Missing arguments: No URL!");
     }
+    let voiceChannel = null;
     //check for voiceChannel
-    const voiceChannel = message.member.voice.channel;
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: playDirect: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not play a song via DM!");
+    }
     if (!voiceChannel) {
-        util.logUserError("User was not connected to a voice channel", "music: playDirect", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User was not connected to a voice channel", "music: playDirect", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to play music!");
     }
     //try to receive song info
@@ -253,23 +280,35 @@ async function playDirect(message, args) {
 
 async function rejoin(message) {
     //log: something went wrong before
-    util.logInfo("Called 'rejoin' function.", "music: rejoin: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
+    util.logInfo("Called 'rejoin' function.", "music: rejoin: log console", "User: " + message.author.tag);
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: rejoin", message.author, "None");
+        return message.channel.send("You have to be in a server channel to let the bot rejoin your voice channel, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried bot to rejoin", "music: rejoin", message.member, "None");
+        util.logUserError("No music playing while user tried bot to rejoin", "music: rejoin", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
-    //incorrect voice channel
-    voiceChannel = message.member.voice.channel;
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: rejoin: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not let the bot rejoin via DM!");
+    }
     if (!voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: rejoin", message.member, "None");
+        util.logUserError("User was not connected to the correct voice channel", "music: rejoin", message.author, "None");
         return message.channel.send("You need to be in a voice channel to let to bot rejoin!");
     }
     //no permissions
     const permissions = voiceChannel.permissionsFor(message.client.user);
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: rejoin", message.member, "None");
+        util.logUserError("Bot did not have enough permissions to play music in specific voice channel", "music: rejoin", message.author, "None");
         return message.channel.send("I need the permissions to join and speak in your voice channel!");
     }
     //leave former voice channel
@@ -301,10 +340,15 @@ async function rejoin(message) {
 }
 
 function vol(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: vol", message.author, "None");
+        return message.channel.send("You have to be in a server channel to change the volume, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("There was no music playing while user tried to change volume", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("There was no music playing while user tried to change volume", "music: vol", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //no parameter --> return volume
@@ -317,18 +361,27 @@ function vol(message, args) {
         args.unshift("5");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: vol: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not change the volume via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: vol", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to change the volume!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: vol", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid number!");
     }
     //range of volume
     if (0 > args[0]) {
-        util.logUserError("User tried to set negative volume", "music: vol", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to set negative volume", "music: vol", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("There can't be a negative volume!");
     }
     serverQueue.volume = args[0];
@@ -343,10 +396,15 @@ function vol(message, args) {
 }
 
 function count(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: count", message.author, "None");
+        return message.channel.send("You have to be in a server channel to count songs in the queue, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No queue for user to count songs", "music: count", message.member, "None");
+        util.logUserError("No queue for user to count songs", "music: count", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     return message.channel.send(`There are ${serverQueue.songs.length} songs in queue!`);
@@ -354,12 +412,18 @@ function count(message) {
 
 function clear(message) {
     //log every try in console
-    util.logInfo("Called 'clear' function.", "music: clear: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
+    util.logInfo("Called 'clear' function.", "music: clear: log console", "User: " + message.author.tag);
+
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: clear", message.author, "None");
+        return message.channel.send("You have to be in a server channel to clear the queue, DMs are not allowed!");
+    }
 
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No queue for user to delete", "music: clear", message.member, "None");
+        util.logUserError("No queue for user to delete", "music: clear", message.author, "None");
         return message.channel.send("Queue is already empty!");
     }
     const num = serverQueue.songs.length;
@@ -386,30 +450,49 @@ function clear(message) {
 }
 
 function now(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: now", message.author, "None");
+        return message.channel.send("You have to be in a server channel to check what is playing, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No server queue while user tried to display current song", "music: now", message.member, "None");
+        util.logUserError("No server queue while user tried to display current song", "music: now", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     return message.channel.send(`Currently live: **${serverQueue.songs[0].title}**!`);
 }
 
 function shuffle(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: shuffle", message.author, "None");
+        return message.channel.send("You have to be in a server channel to shuffle the queue, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No server queue while user tried to shuffle it", "music: shuffle", message.member, "None");
+        util.logUserError("No server queue while user tried to shuffle it", "music: shuffle", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: shuffle", message.member, "None");
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: shuffle: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not shuffle via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: shuffle", message.author, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to shuffle the queue!");
     }
     //not enough songs left
     if (serverQueue.songs.length <= 2) {
-        util.logUserError("Not enough songs in queue to shuffle for user", "music: shuffle", message.member, "None");
+        util.logUserError("Not enough songs in queue to shuffle for user", "music: shuffle", message.author, "None");
         return message.channel.send("There are not enough songs left in the queue to shuffle!");
     }
     //shuffle
@@ -418,7 +501,7 @@ function shuffle(message) {
         serverQueue.songs = util.randomize(serverQueue.songs);
     }
     catch (err) {
-        util.logError("Error in shuffle-algorithm", "music: shuffle: randomize", "None");
+        util.logError(err, "music: shuffle: randomize", "None");
         return message.channel.send("Something went wrong while trying to shuffle!");
     }
     serverQueue.songs.unshift(first);
@@ -426,15 +509,29 @@ function shuffle(message) {
 }
 
 function again(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: again", message.author, "None");
+        return message.channel.send("You have to be in a server channel to restart the song, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to restart song", "music: again", message.member, "None");
+        util.logUserError("No music playing while user tried to restart song", "music: again", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: again", message.member, "None");
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: again: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not restart a song via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: again", message.author, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to restart the current song!");
     }
     //paused --> resume
@@ -450,6 +547,11 @@ function again(message) {
     return; //'play' is going to annnouce the song again, no need to do it here
 }
 function skip(message, args, looping) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: skip", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to skip a song, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no parameter --> skip 1 song
     if (args.length == 0) {
@@ -457,7 +559,7 @@ function skip(message, args, looping) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to skip songs", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("No music playing while user tried to skip songs", "music: skip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //set looping parameter
@@ -468,24 +570,33 @@ function skip(message, args, looping) {
         return message.channel.send("Parameter 'looping' did not match the specified 'boolean' type.");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: skip: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not skip a song via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: skip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to skip songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: skip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter negative/zero
     if (args[0] <= 0) {
-        util.logUserError("User tried to skip negative/zero songs", "music: skip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to skip negative/zero songs", "music: skip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Skipping negative/zero songs does not make any sense!");
     }
     args[0] = parseInt(args[0], 10);
     //skipping too much
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to skip more songs than there are in queue", "music: skip", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     //paused --> resume
@@ -519,6 +630,11 @@ function skip(message, args, looping) {
 }
 
 function unskip(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to unskip songs, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no parameter --> unskip 1 song
     if (args.length == 0) {
@@ -526,27 +642,36 @@ function unskip(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to unskip songs", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("No music playing while user tried to unskip songs", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: unskip: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not unskip via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to unskip songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter negative/zero
     if (args[0] <= 0) {
-        util.logUserError("User tried to unskip negative/zero songs", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to unskip negative/zero songs", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Unskipping negative/zero songs does not make any sense!");
     }
     //unskipping too much
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to unskip more songs than there are in queue", "music: unskip", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     args[0] = parseInt(args[0], 10);
@@ -579,10 +704,15 @@ function unskip(message, args) {
 }
 
 function setLooping(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: setLooping, message.author", "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to set the looping status, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to set looping status", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("No music playing while user tried to set looping status", "music: setLooping", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //no parameter --> return current looping status
@@ -590,13 +720,22 @@ function setLooping(message, args) {
         return message.channel.send("Looping is currently set to: **" + serverQueue.looping + "**!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: setLooping: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not set the looping status via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: setLooping", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to set the looping status!");
     }
     //incorrect parameter (no number)
     if (args[0] != "true" && args[0] != "false") {
-        util.logUserError("User did not enter a valid parameter", "music: setLooping", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: setLooping", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //set looping
@@ -605,6 +744,11 @@ function setLooping(message, args) {
 }
 
 function list(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to list the queue, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no parameter --> list first page only
     if (args.length == 0) {
@@ -612,12 +756,12 @@ function list(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to list queue", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("No music playing while user tried to list queue", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0]) && (args[0] != "all")) {
-        util.logUserError("User did not enter a valid first parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid first parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid number as first parameter!");
     }
     if ((args.length == 1) && (args[0] != "all")) {
@@ -625,7 +769,7 @@ function list(message, args) {
     }
     //incorrect parameter (no number)
     if (isNaN(args[1]) && (args[0] != "all")) {
-        util.logUserError("User did not enter a valid second parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid second parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid number as second parameter!");
     }
     //display queue
@@ -648,15 +792,15 @@ function list(message, args) {
     }
     else {
         if (args[0] <= 0) {
-            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+            util.logUserError("User did not enter a valid parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
             return message.channel.send("You need to enter an integer bigger than zero as first parameter!");
         }
         if ((args[0] - 1) * 10 > serverQueue.songs.length) {
-            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue length: " + serverQueue.songs.length);
+            util.logUserError("User did not enter a valid parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue length: " + serverQueue.songs.length);
             return message.channel.send("Your first page number is too big! There are only " + serverQueue.songs.length + " songs in queue.");
         }
         if (args[1] <= args[0]) {
-            util.logUserError("User did not enter a valid parameter", "music: list", message.member, "Parameter: " + util.arrToString(args, " "));
+            util.logUserError("User did not enter a valid parameter", "music: list", message.author, "Parameter: " + util.arrToString(args, " "));
             return message.channel.send("Your second parameter needs to be bigger than the first one!");
         }
         try {
@@ -674,10 +818,15 @@ function list(message, args) {
 }
 
 function link(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: link", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to link to a song, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to get a link", "music: link", message.member, "None");
+        util.logUserError("No music playing while user tried to get a link", "music: link", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently being played!");
     }
     //no parameter --> default: 1
@@ -686,17 +835,17 @@ function link(message, args) {
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: link", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: link", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter negative/zero
     if (args[0] <= 0) {
-        util.logUserError("User tried to get link of a negative song / song zero", "music: link", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to get link of a negative song / song zero", "music: link", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Negative/zero songs do not make any sense!");
     }
     //nr too big
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted the link to a song out of queue range.", "music: link", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted the link to a song out of queue range.", "music: link", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     args[0] = parseInt(args[0], 10);
@@ -704,20 +853,34 @@ function link(message, args) {
 }
 
 function pause(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: pause", message.author, "None");
+        return message.channel.send("You have to be in a server channel to pause, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to pause", "music: pause", message.member, "None");
+        util.logUserError("No music playing while user tried to pause", "music: pause", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: pause", message.member, "None");
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: pause: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not pause via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: pause", message.author, "None");
         return message.channel.send("You need to be in the same voice channel as the bot in order to pause the music!");
     }
     //already paused
     if (!serverQueue.playing) {
-        util.logUserError("Already paused when user tried to", "music: pause", message.member, "None");
+        util.logUserError("Already paused when user tried to", "music: pause", message.author, "None");
         return message.channel.send("Music is already paused!");
     }
     //set 'playing' to false
@@ -735,20 +898,34 @@ function pause(message) {
 }
 
 function resume(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: resume", message.author, "None");
+        return message.channel.send("You have to be in a server channel to resume, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to resume", "music: resume", message.member, "None");
+        util.logUserError("No music playing while user tried to resume", "music: resume", message.author, "None");
         return message.channel.send("Nothing is currently in the queue!");
     }
     //already playing
     if (serverQueue.playing) {
-        util.logUserError("Already playing music when user tried to resume", "music: resume", message.member, "None");
+        util.logUserError("Already playing music when user tried to resume", "music: resume", message.author, "None");
         return message.channel.send("Music is already on air!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: resume", message.member, "None");
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: resume: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not resume via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: resume", message.author, "None");
         return message.channel.send("You need to be in the same voice channel as the bot in order to resume the music!");
     }
     //set 'playing' to true
@@ -774,6 +951,11 @@ function resume(message) {
 }
 
 function remove(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: remove", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to remove songs from the queue, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no parameter --> remove first song
     if (args.length == 0) {
@@ -781,27 +963,36 @@ function remove(message, args) {
     }
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No serverQueue while user tried to remove songs", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("No serverQueue while user tried to remove songs", "music: remove", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Nothing is currently in the queue!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: remove: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not remove songs via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: remove", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in the same voice channel as the bot to remove songs!");
     }
     //incorrect parameter (no number)
     if (isNaN(args[0])) {
-        util.logUserError("User did not enter a valid parameter", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid parameter", "music: remove", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to enter a valid integer!");
     }
     //incorrect parameter 0
     if (args[0] <= 0) {
-        util.logUserError("User tried to remove negative/zero songs", "music: remove", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to remove negative/zero songs", "music: remove", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Removing negative/zero songs does not make any sense!");
     }
     //index out of range
     if (args[0] > serverQueue.songs.length) {
-        util.logUserError("User wanted to remove a song out of the queue", "music: remove", message.member, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
+        util.logUserError("User wanted to remove a song out of the queue", "music: remove", message.author, "Parameter: " + util.arrToString(args, " ") + " | Queue Length: " + serverQueue.songs.length);
         return message.channel.send("There are only " + serverQueue.songs.length + " songs in queue!");
     }
     args[0] = parseInt(args[0], 10);
@@ -825,14 +1016,28 @@ function remove(message, args) {
 }
 
 function load(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: load", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to load songs to the queue, DMs are not allowed!");
+    }
     //no parameter
     if (args.length == 0) {
-        util.logUserError("User tried to load from file without parameter.", "music: load", message.member, "None");
+        util.logUserError("User tried to load from file without parameter.", "music: load", message.author, "None");
         return message.channel.send("Missing parameter: Which file should I load?");
     }
     //incorrect voice channel
-    if (!message.member.voice.channel) {
-        util.logUserError("User was not connected to a voice channel", "music: load", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: load: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not load songs via DM!");
+    }
+    if (!voiceChannel) {
+        util.logUserError("User was not connected to a voice channel", "music: load", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to attach songs from a file to the queue!");
     }
 
@@ -847,13 +1052,13 @@ function load(message, args) {
     try {
         readLineFile = objLine.createInterface({
             input: fs.createReadStream(pathName + args[0]).on('error', err => {
-                util.logUserError(err, "music: load: fs.createReadStream error handler", message.member, "Parameter: " + util.arrToString(args, " "));
+                util.logUserError(err, "music: load: fs.createReadStream error handler", message.author, "Parameter: " + util.arrToString(args, " "));
                 return message.channel.send("Could not load " + args[0] + "!");
             })
         });
     }
     catch (err) {
-        util.logUserError(err, "music: load: createFileInterface", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError(err, "music: load: createFileInterface", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("Could not load " + args[0] + "!");
     }
 
@@ -880,15 +1085,20 @@ function load(message, args) {
 }
 
 function write(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: shuffle", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to shuffle the queue, DMs are not allowed!");
+    }
     //no parameter
     if (args.length == 0) {
-        util.logUserError("User tried to write to file without parameter.", "music: write", message.member, "None");
+        util.logUserError("User tried to write to file without parameter.", "music: write", message.author, "None");
         return message.channel.send("Missing parameter: Which file should I write to?");
     }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("User tried to write empty queue to file.", "music: write", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User tried to write empty queue to file.", "music: write", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("No queue to save!");
     }
     //write all URLs to a file
@@ -907,21 +1117,45 @@ function write(message, args) {
 }
 
 function requested(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: requested", message.author, "None");
+        return message.channel.send("You have to be in a server channel to get who requested this song, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id)
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("User tried to request impulse of empty queue.", "music: request", message.member, "None");
+        util.logUserError("User tried to request impulse of empty queue.", "music: request", message.author, "None");
         return message.channel.send("Nothing is currently playing!");
     }
     return message.channel.send(`**${serverQueue.songs[0].title}** was requested by ${serverQueue.songs[0].user}!`);
 }
 
 function removeDoubles(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: removeDoubles", message.author, "None");
+        return message.channel.send("You have to be in a server channel to remove duplicates, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id)
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("User tried to remove doubles in empty queue.", "music: removeDoubles", message.member, "None");
+        util.logUserError("User tried to remove doubles in empty queue.", "music: removeDoubles", message.author, "None");
         return message.channel.send("Nothing is currently in the queue!");
+    }
+    //incorrect voice channel
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: removeDoubles: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not remove duplicates via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: removeDoubles", message.author, "None");
+        return message.channel.send("You need to be in the same voice channel as the bot to remove duplicate songs!");
     }
     removed = 0;
     try {
@@ -944,7 +1178,7 @@ function removeDoubles(message) {
 async function search(message, args) {
     //no arguments
     if (args.length == 0) {
-        util.logUserError("User did not enter a search parameter", "music: search", message.member, "None");
+        util.logUserError("User did not enter a search parameter", "music: search", message.author, "None");
         return message.channel.send("You need to enter a query!");
     }
     //test for result number
@@ -953,7 +1187,7 @@ async function search(message, args) {
     }
     results = args.pop();
     if (results > 20) {
-        util.logUserError("User entered a too large number", "music: search", message.member, "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);
+        util.logUserError("User entered a too large number", "music: search", message.author, "Parameter: " + util.arrToString(args, " ") + " | Max Result Number: " + results);
         return message.channel.send("You need to enter a max result number smaller then or equal to 20!");
     }
     //try searching via ytsr
@@ -992,14 +1226,28 @@ async function search(message, args) {
 }
 
 async function addPlaylist(message, args) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: addPlaylist", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to add a playlist to the queue, DMs are not allowed!");
+    }
     //no parameter
     if (args.length == 0) {
-        util.logUserError("User tried to load from YT-playlist without parameter.", "music: addPlaylist", message.member, "None");
+        util.logUserError("User tried to load from YT-playlist without parameter.", "music: addPlaylist", message.author, "None");
         return message.channel.send("Missing parameter: No playlist link!");
     }
     //incorrect voice channel
-    if (!message.member.voice.channel) {
-        util.logUserError("User was not connected to a voice channel", "music: addPlaylist", message.member, "Parameter: " + util.arrToString(args, " "));
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: addPlaylist: voiceChannel", message.author, "Probably asked in DM, Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("I could not find your voice channel. You can not add a playlist via DM!");
+    }
+    if (!voiceChannel) {
+        util.logUserError("User was not connected to a voice channel", "music: addPlaylist", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("You need to be in a voice channel to attach songs from a playlist to the queue!");
     }
 
@@ -1032,17 +1280,31 @@ async function addPlaylist(message, args) {
 }
 
 function finish(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: finish", message.author, "None");
+        return message.channel.send("You have to be in a server channel to finish playing, DMs are not allowed!");
+    }
     //almost equal to queue clearing --> log it!
     util.logInfo("Called 'finish' function.", "music: finish: log console", "User: " + message.member.user.tag + " (" + message.member.nickname + ")");
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to finish queue", "music: finish", message.member, "None");
+        util.logUserError("No music playing while user tried to finish queue", "music: finish", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     //incorrect voice channel
-    if (message.member.voice.channel != serverQueue.voiceChannel) {
-        util.logUserError("User was not connected to the correct voice channel", "music: finish", message.member, "None");
+    let voiceChannel = null;
+    //check for voiceChannel
+    try {
+        voiceChannel = message.member.voice.channel;
+    }
+    catch (err) {
+        util.logUserError(err, "music: finish: voiceChannel", message.author, "Probably asked in DM");
+        return message.channel.send("I could not find your voice channel. You can not finish playing via DM!");
+    }
+    if (voiceChannel != serverQueue.voiceChannel) {
+        util.logUserError("User was not connected to the correct voice channel", "music: finish", message.author, "None");
         return message.channel.send("You need to be in the same voice channel as the bot to finish the queue!");
     }
     //set looping off
@@ -1062,10 +1324,15 @@ function finish(message) {
 }
 
 function time(message) {
+    //check for guild --> no DMs allowed!
+    if (!message.guild) {
+        util.logUserError("User was not in a guild: command executed in DM", "music: time", message.author, "None");
+        return message.channel.send("You have to be in a server channel to get the song timer, DMs are not allowed!");
+    }
     serverQueue = queues.get(message.guild.id);
     //no serverQueue
     if (!serverQueue) {
-        util.logUserError("No music playing while user tried to get song timestamp", "music: time", message.member, "None");
+        util.logUserError("No music playing while user tried to get song timestamp", "music: time", message.author, "None");
         return message.channel.send("Nothing is currently being played!");
     }
     var curr;

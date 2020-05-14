@@ -398,7 +398,7 @@ function help(message, args) {
             }
         }
         if (!found) {
-            util.logUserError("User entered non-registered module/command", "main: help", message.member, "Current parameter: " + args[i] + " | All parameters: " + util.arrToString(args, " "));
+            util.logUserError("User entered non-registered module/command", "main: help", message.author, "Current parameter: " + args[i] + " | All parameters: " + util.arrToString(args, " "));
             return message.channel.send("Unknown module/command: " + args[i]);
         }
     }
@@ -552,7 +552,7 @@ client.on("message", async message => {
         }
         //no command found --> error
         args.unshift(first);
-        util.logUserError("User did not enter a valid command.", "message listener", message.member, "Parameter: " + util.arrToString(args, " "));
+        util.logUserError("User did not enter a valid command.", "message listener", message.author, "Parameter: " + util.arrToString(args, " "));
         message.channel.send("Please enter a valid command!");
     }
     catch (err) {

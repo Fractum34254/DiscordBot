@@ -14,7 +14,7 @@ function flip(message) {
 function rps(message, args) {
     //no argument
     if (args.length == 0) {
-        util.logUserError("User called function without parameter.", "fun: rps", message.member, "None");
+        util.logUserError("User called function without parameter.", "fun: rps", message.author, "None");
         return message.channel.send("I won't be playing against myself!");
     }
     //choose: 0 -> rock, 1 -> scissors, 2 -> paper
@@ -48,7 +48,7 @@ function rps(message, args) {
             delta = 2 - n;
             break;
         default:
-            util.logUserError("User entered missspelled parameter.", "fun: rps: switch args[0]", message.member, "Parameter: " + util.arrToString(args, " "));
+            util.logUserError("User entered missspelled parameter.", "fun: rps: switch args[0]", message.author, "Parameter: " + util.arrToString(args, " "));
             return message.channel.send("What did you show?");
             break;
     }

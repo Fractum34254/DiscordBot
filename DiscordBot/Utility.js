@@ -25,7 +25,7 @@ function logInfo(info, position, addInfo) {
 function logUserError(warn, position, user, info) {
     var cDate = new Date();
     console.log("\n------------[USER ERROR]------------");
-    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user.user.tag + " (" + user.nickname + ")\n[MESSAGE]");
+    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user.tag  + "\n[MESSAGE]");
     console.log(warn);
     console.log("[Additional Information] " + info);
     console.log("----------[USER ERROR END]----------\n");

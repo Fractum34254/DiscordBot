@@ -220,7 +220,8 @@ function play(message) {
         }
         play(message);
     }
-    serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5.0);
+    serverQueue.connection.dispatcher.setVolumeDecibels(-9.0);
+    serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.connection.dispatcher.volumeLogarithmic * serverQueue.volume / 5.0);
     message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
 }
 
@@ -390,7 +391,8 @@ function vol(message, args) {
     }
     serverQueue.volume = args[0];
     try {
-        serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume / 5.0);
+        serverQueue.connection.dispatcher.setVolumeDecibels(-9.0);
+        serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.connection.dispatcher.volumeLogarithmic * serverQueue.volume / 5.0);
     }
     catch (err) {
         util.logErr(err, "music: vol: Set dispatcher volume", "Parameter: " + util.arrToString(args, " "));

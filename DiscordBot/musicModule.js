@@ -190,21 +190,32 @@ function play(message) {
                 play(message);
             }))
             .on("finish", () => {
-                const first = serverQueue.songs.shift();
-                if (serverQueue.looping) {
-                    serverQueue.songs.push(first);
+                if (serverQueue && serverQueue.songs[0]) {
+                    const first = serverQueue.songs.shift();
+                    if (serverQueue.looping) {
+                        serverQueue.songs.push(first);
+                    }
                 }
                 //Recursion
                 play(message);
             })
             .on("error", err => {
                 //log Error and inform users
-                util.logErr(err, "music: play: connection.play: on error", "URL: " + serverQueue.songs[0].url);
+                let url = "";
+                if (!serverQueue && !serverQueue.songs[0]) {
+                    url = "-None- (missing serverQueue/songlist)";
+                }
+                else {
+                    url = serverQueue.songs[0].url;
+                }
+                util.logErr(err, "music: play: connection.play: on error", "URL: " + url);
                 message.channel.send("Something went wrong while trying to play the song **" + serverQueue.songs[0].title + "**.\nContinuing to the next one");
                 //finish song (continue)
-                const first = serverQueue.songs.shift();
-                if (serverQueue.looping) {
-                    serverQueue.songs.push(first);
+                if (serverQueue && serverQueue.songs[0]) {
+                    const first = serverQueue.songs.shift();
+                    if (serverQueue.looping) {
+                        serverQueue.songs.push(first);
+                    }
                 }
                 play(message);
             });

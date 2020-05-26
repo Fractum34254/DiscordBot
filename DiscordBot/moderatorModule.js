@@ -78,7 +78,21 @@ function purge(message, args) {
     }
 }
 
+function kill(message) {
+    if (message.author.id != "292056469384331276") {
+        util.logUserError("User tried to terminate Bot but did not have the right to do so.", "moderator: kill", message.author, "None");
+        return message.channel.send(`Only <@292056469384331276> can terminate the bot!`);
+    }
+    util.logInfo("Bot terminated.", "moderator: kill", "None");
+    message.channel.send("Shutting down...");
+    setTimeout((function () {
+        return process.kill(process.pid);
+    }), 1000);
+    return;
+}
+
 module.exports = {
     ban: ban,
-    purge: purge
+    purge: purge,
+    kill: kill
 }

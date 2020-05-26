@@ -290,6 +290,14 @@ commands = [];
         func: function (message, args) { return mod.purge(message, args); }
     });
     commands.push({
+        names: ["kill"],
+        parameter: "",
+        description: "End bot",
+        longDescription: "Terminates the process of the bot completely. Only available to whitelisted users.",
+        module: "moderator",
+        func: function (message, args) { return mod.kill(message); }
+    });
+    commands.push({
         names: ["rps"],
         parameter: "<r|p|s>",
         description: "Play against the bot!",

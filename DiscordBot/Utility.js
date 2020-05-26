@@ -6,29 +6,29 @@ const objLine = require('readline');
 
 function logErr(err, position, info) {
     var cDate = new Date();
-    console.log('\n------------\x1b[31m%s\x1b[0m------------', '[ERROR]');
+    console.log('\n\x1b[31m%s\x1b[0m', '----------------------------[ERROR]-----------------------------');
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(err);
     console.log("[Additional Information] " + info);
-    console.log("----------[ERROR END]----------\n");
+    console.log('\n\x1b[31m%s\x1b[0m', '---------------------------[ERROR END]--------------------------');
 }
 
 function logInfo(info, position, addInfo) {
     var cDate = new Date();
-    console.log("\n------------\x1b[32m%s\x1b[0m------------", "[INFO]");
+    console.log("\n\x1b[32m%s\x1b[0m", "-----------------------------[INFO]-----------------------------");
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
     console.log(info);
     console.log("[Additional Information] " + addInfo);
-    console.log("----------[INFO END]----------\n");
+    console.log("\n\x1b[32m%s\x1b[0m", "---------------------------[INFO END]---------------------------");
 }
 
 function logUserError(warn, position, user, info) {
     var cDate = new Date();
-    console.log("\n------------\x1b[33m%s\x1b[0m------------", "[USER ERROR]");
+    console.log("\n\x1b[33m%s\x1b[0m", "--------------------------[USER ERROR]--------------------------");
     console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user.tag  + "\n[MESSAGE]");
     console.log(warn);
     console.log("[Additional Information] " + info);
-    console.log("----------[USER ERROR END]----------\n");
+    console.log("\n\x1b[33m%s\x1b[0m", "------------------------[USER ERROR END]------------------------");
 }
 
 function randomize(array) {

@@ -202,7 +202,7 @@ function play(message) {
             .on("error", err => {
                 //log Error and inform users
                 let url = "";
-                if (!serverQueue && !serverQueue.songs[0]) {
+                if ((!serverQueue) || (!serverQueue.songs[0])) {
                     url = "-None- (missing serverQueue/songlist)";
                 }
                 else {

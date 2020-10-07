@@ -76,10 +76,8 @@ function randomColor(message) {
     embed = new Discord.MessageEmbed();
     embed.setColor(hex);
     embed.setTitle("Your color:");
-    embed.addFields(
-        { name: 'Hex', value: hex, inline: true },
-        { name: 'RGB', value: r.toString(10) + " " + g.toString(10) + " " + b.toString(10), inline: true }
-    );
+    embed.addField('Hex', hex, true);
+    embed.addField('RGB', r.toString(10) + " " + g.toString(10) + " " + b.toString(10), true);
     embed.setFooter("Meme God Bot by Fractum#3592");
 	embed.setTimestamp();
     message.channel.send(embed);

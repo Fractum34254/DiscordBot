@@ -86,8 +86,8 @@ async function execute(message, args, text, retry) {
         return;
     }
     const song = {
-        title: songInfo.title,
-        url: songInfo.video_url,
+        title: songInfo.videoDetails.title,
+        url: songInfo.videoDetails.video_url,
         user: message.member,
         length: songInfo.player_response.videoDetails.lengthSeconds,
         startTime: undefined,

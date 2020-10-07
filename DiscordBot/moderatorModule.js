@@ -19,7 +19,7 @@ function ban(message, args) {
     if (user) {
         const member = message.guild.member(user);
         if (member) {
-            member.ban({ reason: util.arrToString(args.subarray(1), " ") })
+            member.ban({ reason: util.arrToString(args.slice(1), " ") })
                 .then(() => {
                     util.logInfo(`${member.user.tag} was banned by ${message.member.user.tag}!`, "moderator: ban", "Parameters: " + util.arrToString(args, " "));
                     return message.channel.send(`Successfully banned ${member.user.tag}`);

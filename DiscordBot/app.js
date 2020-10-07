@@ -358,10 +358,8 @@ function info(message) {
     embed = new Discord.MessageEmbed();
     embed.setColor('#1c061b');
     embed.setTitle("Meme God - Info");
-    embed.addFields(
-        { name: 'GitHub', value: "https://github.com/Fractum34254/DiscordBot" },
-        { name: 'Add Bot to own server', value: "https://discordapp.com/api/oauth2/authorize?client_id=694262365608345671&scope=bot&permissions=8" }
-    );
+    embed.addField('GitHub', "https://github.com/Fractum34254/DiscordBot");
+    embed.addField('Add Bot to own server', "https://discordapp.com/api/oauth2/authorize?client_id=694262365608345671&scope=bot&permissions=8");
     embed.setThumbnail('https://imgur.com/ZL5kZpK.png')
     embed.setFooter("Meme God Bot by Fractum#3592");
     embed.setTimestamp();
@@ -511,12 +509,10 @@ function help(message, args) {
             embed = new Discord.MessageEmbed();
             embed.setColor('#1c061b');
             embed.setTitle("Help: " + commands[i].names[0]);
-            embed.addFields(
-                { name: 'Aliases', value: util.arrToString(commands[i].names.slice(1), ", ", "---"), inline: true },
-                { name: 'Parameter', value: (commands[i].parameter == "") ? "---" : commands[i].parameter, inline: true },
-                { name: 'Module', value: commands[i].module, inline: true },
-                { name: 'Description', value: commands[i].longDescription }
-            );
+            embed.addField('Aliases', util.arrToString(commands[i].names.slice(1), ", ", "---"), true);
+            embed.addField('Parameter', (commands[i].parameter == "") ? "---" : commands[i].parameter, true);
+            embed.addField('Module', commands[i].module, true);
+            embed.addField('Description', commands[i].longDescription);
             if (commands[i].example) {
                 embed.addField('Example', commands[i].example);
             }

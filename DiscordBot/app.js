@@ -8,6 +8,9 @@ const fun = require('./funModule.js');
 const util = require('./Utility.js');
 const mod = require('./moderatorModule.js');
 
+const readline = require('readline');
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
 //Error handling - last instance
 process.on('uncaughtException', (err, origin) => {
     // inform Devs on origin server
@@ -24,6 +27,53 @@ process.on('uncaughtException', (err, origin) => {
     }
     return util.logErr(err, "main: uncaughtException handler", origin);
 });
+
+//classes to enable Input/Output from/to console
+
+class ConsoleAuthor {
+    constructor() {
+        this.tag = "ConsoleUser";
+        this.id = "292056469384331276";
+    }
+}
+
+class ConsoleChannel {
+    constructor() {
+        this.name = "Console";
+    }
+    bulkDelete()
+    {
+        let user = new ConsoleAuthor();
+        util.logUserError("You can't delete messages in the console!", "app: ConsoleChannel: bulkDelete", user, "");
+    } 
+    send(inputMsg) {
+        if (inputMsg.constructor.name == "MessageEmbed") {
+            //handle embeds (deconstruct them)
+            console.log("Detected embed!");
+        }
+        else if (typeof inputMsg == "string") {
+            //text
+            console.log(inputMsg);
+        }
+        else {
+            //error
+            let user = new ConsoleAuthor();
+            util.logUserError("Could not detect input.", "app: ConsoleChannel: bulkDelete", user, "");
+        }
+        //return a sent message
+        let msg;
+        msg.delete = function () { };
+        return msg;
+    }
+}
+
+class ConsoleMessage {
+    constructor(content) {
+        this.content = content;
+        this.author = new ConsoleAuthor();
+        this.channel = new ConsoleChannel();
+    }
+}
 
 //Define all commands as objects
 commands = [];
@@ -595,3 +645,30 @@ client.on('guildMemberAdd', member => {
 
 //VERY IMPORTANT TO CALL THESE!!
 client.login(token);
+
+//Look for console input
+rl.on('line', (input) => {
+    let message = new ConsoleMessage(input);
+    try {
+        if (message.content.startsWith(prefix)) message.content = message.content.substr(1);
+        var args = message.content.split(" ");
+        args = args.filter(function (value, index, arr) { return (value != ""); });
+        const first = args.shift();
+
+        //search commands for proper command
+        for (i = 0; i < commands.length; i++) {
+            for (j = 0; j < commands[i].names.length; j++) {
+                if (commands[i].names[j] === first) {
+                    commands[i].func(message, args);
+                    return;
+                }
+            }
+        }
+        //no command found --> error
+        args.unshift(first);
+        util.logUserError("User did not enter a valid command.", "console message listener", message.author, "Parameter: " + util.arrToString(args, " "));
+    }
+    catch (err) {
+        util.logErr(err, "console message listener: final catch embrace", "None");
+    }
+});

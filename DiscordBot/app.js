@@ -61,7 +61,7 @@ class ConsoleChannel {
             util.logUserError("Could not detect input.", "app: ConsoleChannel: bulkDelete", user, "");
         }
         //return a sent message
-        let msg;
+        let msg = {};
         msg.delete = function () { };
         return msg;
     }

@@ -581,6 +581,10 @@ client.on("message", async message => {
 
 // Create an event listener for new guild members
 client.on('guildMemberAdd', member => {
+    //only log new users on specific server, ignore all other
+    if (member.guild.id != client.guilds.resolve('688081153361576013').id) {
+        return;
+    }
     // Send the message to a designated channel on a server:
     const channel = member.guild.channels.cache.find(ch => ch.name === 'dev-chat');
     // Do nothing if the channel wasn't found on this server

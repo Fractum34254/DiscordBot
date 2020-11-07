@@ -344,7 +344,7 @@ commands = [];
         names: ["purge"],
         parameter: "<int>",
         description: "Delete messages",
-        longDescription: "Deletes the last messages, you can enter up to 200. You need the permission to manage messages.",
+        longDescription: "Deletes the last messages, you can enter up to 99. You need the permission to manage messages.",
         module: "moderator",
         func: function (message, args) { return mod.purge(message, args); }
     });

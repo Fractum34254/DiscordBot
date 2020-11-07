@@ -63,9 +63,9 @@ function purge(message, args) {
         util.logUserError("User entered invalid parameter: negative number / zero.", "moderator: purge", message.author, "Parameters: " + util.arrToString(args, " "));
         return message.channel.send("Invalid parameter: " + args[0] + " is not positive!");
     }
-    if (args[0] > 200) {
-        util.logUserError("User wanted to delete more than 200 messages.", "moderator: purge", message.author, "Parameters: " + util.arrToString(args, " "));
-        return message.channel.send(args[0] + " is bigger than the allowed amount (200)!");
+    if (args[0] > 99) {
+        util.logUserError("User wanted to delete more than 99 messages.", "moderator: purge", message.author, "Parameters: " + util.arrToString(args, " "));
+        return message.channel.send(args[0] + " is bigger than the allowed amount (99)!");
     }
     args[0] = parseInt(args[0], 10) + 1;
     try {

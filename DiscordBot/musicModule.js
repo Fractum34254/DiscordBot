@@ -19,6 +19,10 @@ const ytpl = require("ytpl");
 const urls = new Map();
 const pathName = "playlists/";
 const killPathName = "killSaveLists/";
+//temp storage for saving a queue
+let tempMsg;
+let tempServerQ;
+let tempArgs;
 //storage for urls from YT-playlist
 const playlists = new Map();
 
@@ -330,7 +334,7 @@ async function rejoin(message) {
     }
     //leave former voice channel
     try {
-        serverQueue.connection.disconnect().on("disconnect", () => {
+        serverQueue.connection.disconnect().then(async () => {
             try {
                 serverQueue.voiceChannel.leave();
             }
@@ -1193,6 +1197,58 @@ function loadShuffled(message, args) {
     };
 }
 
+function makeUniqueFile(filePathName, args, serverQueue, message) {
+    tempArgs = args;
+    tempServerQ = serverQueue;
+    tempMsg = message;
+    fs.writeFile(filePathName, "", { flag: "ax" }, function (err) {
+        if (err) {
+            let digit = filePathName.slice(-1);
+            if (!isNaN(digit)) {
+                if (digit != 9) {
+                    filePathName = filePathName.slice(0, -1);
+                    digit++;
+                    filePathName += digit;
+                }
+                else {
+                    filePathName += "1";
+                }
+            }
+            else {
+                filePathName += "1";
+            }
+            return makeUniqueFile(filePathName, tempArgs, tempServerQ, tempMsg);
+        }
+        else {
+            args = tempArgs;
+            serverQueue = tempServerQ;
+            message = tempMsg;
+            args[0] = filePathName.substring(pathName.length);
+            //write all URLs to a file --> OVERRIDES FILE!
+            errorCount = 0;
+            try {
+                util.overrideFile(pathName + args[0], serverQueue.songs[0].url);
+            }
+            catch (err) {
+                util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + 0 + " | URL: " + serverQueue.songs[0].url + " | Title: " + serverQueue.songs[0].title);
+                message.channel.send("Error while trying to save the url of **" + serverQueue.songs[0].title + "**. Continuing.");
+                errorCount++;
+            }
+            for (let i = 1; i < serverQueue.songs.length; i++) {
+                try {
+                    util.addLineToFile(pathName + args[0], serverQueue.songs[i].url);
+                }
+                catch (err) {
+                    util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
+                    message.channel.send("Error while trying to save the url of **" + serverQueue.songs[i].title + "**. Continuing.");
+                    errorCount++;
+                }
+            }
+            return message.channel.send("Successfully wrote " + 100 * (serverQueue.songs.length - errorCount) / serverQueue.songs.length + "% to the file " + args[0] + "!");
+        }
+    });
+}
+
 function write(message, args) {
     //check for guild --> no DMs allowed!
     if (!message.guild) {
@@ -1211,42 +1267,7 @@ function write(message, args) {
         return message.channel.send("No queue to save!");
     }
     //if file exists, add numbers to the back to make it unique
-    while (function () { fs.access(pathName + args[0], fs.constants.F_OK, (err) => { return err ? false : true; }); }) {
-        if (!args[0].slice(-1).isNaN()) {
-            let digit = args[0].slice(-1);
-            if (digit != 9) {
-                args[0] = args[0].slice(0, -1);
-                args[0] += (++digit);
-            }
-            else {
-                args[0] += "1";
-            }
-        }
-        else {
-            args[0] += "1";
-        }
-    }
-    //write all URLs to a file --> OVERRIDES FILE!
-    errorCount = 0;
-    try {
-        util.overrideFile(pathName + args[0], serverQueue.songs[0].url);
-    }
-    catch (err) {
-        util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + 0 + " | URL: " + serverQueue.songs[0].url + " | Title: " + serverQueue.songs[0].title);
-        message.channel.send("Error while trying to save the url of **" + serverQueue.songs[0].title + "**. Continuing.");
-        errorCount++;
-    }
-    for (i = 1; i < serverQueue.songs.length; i++) {
-        try {
-            util.addLineToFile(pathName + args[0], serverQueue.songs[i].url);
-        }
-        catch (err) {
-            util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
-            message.channel.send("Error while trying to save the url of **" + serverQueue.songs[i].title + "**. Continuing.");
-            errorCount++;
-        }
-    }
-    return message.channel.send("Successfully wrote " + 100 * (serverQueue.songs.length - errorCount) / serverQueue.songs.length + "% to the file " + args[0] + "!");
+    makeUniqueFile(pathName + args[0], args, serverQueue, message);
 }
 
 function requested(message) {
@@ -1513,12 +1534,12 @@ function killSave() {
     for (let i = 0; i < queues.size; i++) {
         //get songs of each server queue
         key = iterator.next().value;
-        songs = queue.get(key).songs;
+        songs = queues.get(key).songs;
         //add the urls together to one string
-        let urls = "";
-        for (let j = 0; j < songs.length; j++) {
-            urls += songs[j].url;
+        let urls = songs[0].url;
+        for (let j = 1; j < songs.length; j++) {
             urls += "\n";
+            urls += songs[j].url;
         }
         //write string to proper file
         util.overrideFile(killPathName + key, urls);

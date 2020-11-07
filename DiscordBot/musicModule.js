@@ -329,30 +329,31 @@ async function rejoin(message) {
     }
     //leave former voice channel
     try {
-        serverQueue.connection.disconnect();
+        serverQueue.connection.disconnect().on("disconnect", () => {
+            try {
+                serverQueue.voiceChannel.leave();
+            }
+            catch (err) {
+                util.logErr(err, "music: rejoin: leave channel", "Unable to leave voice channel, continuing");
+            }
+            serverQueue.voiceChannel = voiceChannel;
+            //try connecting to voiceChannel
+            var connection;
+            try {
+                connection = await voiceChannel.join();
+            }
+            catch (err) {
+                util.logErr(err, "music: rejoin: join VoiceChannel", "None");
+                return message.channel.send("Error while trying to join the voice channel.");
+            }
+            serverQueue.connection = connection;
+            message.channel.send("Successfully rejoined!");
+            play(message);
+        });
     }
     catch (err) {
         util.logErr(err, "music: rejoin: disconnect", "Unable to disconnect voice connection, continuing");
     }
-    try {
-        serverQueue.voiceChannel.leave();
-    }
-    catch (err) {
-        util.logErr(err, "music: rejoin: leave channel", "Unable to leave voice channel, continuing");
-    }
-    serverQueue.voiceChannel = voiceChannel;
-    //try connecting to voiceChannel
-    var connection;
-    try {
-        connection = await voiceChannel.join();
-    }
-    catch (err) {
-        util.logErr(err, "music: rejoin: join VoiceChannel", "None");
-        return message.channel.send("Error while trying to join the voice channel.");
-    }
-    serverQueue.connection = connection;
-    message.channel.send("Successfully rejoined!");
-    play(message);
 }
 
 function vol(message, args) {

@@ -18,6 +18,7 @@ const ytpl = require("ytpl");
 //storage for urls from file
 const urls = new Map();
 const pathName = "playlists/";
+const killPathName = "killSaveLists/";
 //storage for urls from YT-playlist
 const playlists = new Map();
 
@@ -1503,6 +1504,23 @@ function listLists(message) {
     });
 }
 
+function killSave() {
+    let iterator = queues.keys();
+    for (let i = 0; i < queues.size; i++) {
+        //get songs of each server queue
+        key = iterator.next().value;
+        songs = queue.get(key).songs;
+        //add the urls together to one string
+        let urls = "";
+        for (let j = 0; j < songs.length; j++) {
+            urls += songs[j].url;
+            urls += "\n";
+        }
+        //write string to proper file
+        util.overrideFile(killPathName + key, urls);
+    }
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -1530,5 +1548,6 @@ module.exports = {
     finish: finish,
     rejoin: rejoin,
     time: time,
-    listLists: listLists
+    listLists: listLists,
+    killSave: killSave
 }

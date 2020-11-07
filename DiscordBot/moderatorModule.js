@@ -1,5 +1,7 @@
 ﻿//common functions (error handling etc)
 const util = require('./Utility.js');
+//music function (for killSave)
+const music = require('./musicModule.js');
 
 function ban(message, args) {
     //check for guild --> no DMs allowed!
@@ -83,6 +85,8 @@ function kill(message) {
         util.logUserError("User tried to terminate Bot but did not have the right to do so.", "moderator: kill", message.author, "None");
         return message.channel.send(`Only <@292056469384331276> can terminate the bot!`);
     }
+    //killSave
+    music.killSave();
     util.logInfo("Bot terminated.", "moderator: kill", "None");
     message.channel.send("Shutting down...");
     setTimeout((function () {

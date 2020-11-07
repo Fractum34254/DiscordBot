@@ -352,7 +352,7 @@ commands = [];
         names: ["kill"],
         parameter: "",
         description: "End bot",
-        longDescription: "Terminates the process of the bot completely. Only available to whitelisted users.",
+        longDescription: "Terminates the process of the bot completely. Only available to whitelisted users. Saves the current queue. Restore after restart via 'restore'.",
         module: "moderator",
         func: function (message, args) { return mod.kill(message); }
     });

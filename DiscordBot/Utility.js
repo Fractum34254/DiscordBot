@@ -50,9 +50,17 @@ function randomize(array) {
     return array;
 }
 
-function writeLineToFile(filePath, data) {
+function addLineToFile(filePath, data) {
     var line = data + os.EOL;
     fs.writeFile(filePath, line, { flag: "a" },
+        function (err) {
+            if (err) throw err;
+        });
+}
+
+function overrideFile(filePath, data) {
+    var line = data + os.EOL;
+    fs.writeFile(filePath, line, { flag: "w" },
         function (err) {
             if (err) throw err;
         });
@@ -143,7 +151,8 @@ module.exports =
         randomize: randomize,
         logInfo: logInfo,
         trimString: trimString,
-        writeLineToFile: writeLineToFile,
+        addLineToFile: addLineToFile,
+        overrideFile: overrideFile,
         arrToString: arrToString,
         rgbToHex: rgbToHex,
         hexToRgb: hexToRgb,

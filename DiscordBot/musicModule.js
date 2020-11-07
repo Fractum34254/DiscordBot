@@ -1191,8 +1191,8 @@ function loadShuffled(message, args) {
 function write(message, args) {
     //check for guild --> no DMs allowed!
     if (!message.guild) {
-        util.logUserError("User was not in a guild: command executed in DM", "music: shuffle", message.author, "Parameter: " + util.arrToString(args, " "));
-        return message.channel.send("You have to be in a server channel to shuffle the queue, DMs are not allowed!");
+        util.logUserError("User was not in a guild: command executed in DM", "music: write", message.author, "Parameter: " + util.arrToString(args, " "));
+        return message.channel.send("You have to be in a server channel to save the queue, DMs are not allowed!");
     }
     //no parameter
     if (args.length == 0) {
@@ -1205,14 +1205,38 @@ function write(message, args) {
         util.logUserError("User tried to write empty queue to file.", "music: write", message.author, "Parameter: " + util.arrToString(args, " "));
         return message.channel.send("No queue to save!");
     }
-    //write all URLs to a file
+    //if file exists, add numbers to the back to make it unique
+    while (function () { fs.access(pathName + args[0], fs.constants.F_OK, (err) => { return err ? false : true; }); }) {
+        if (!args[0].slice(-1).isNaN()) {
+            let digit = args[0].slice(-1);
+            if (digit != 9) {
+                args[0] = args[0].slice(0, -1);
+                args[0] += (++digit);
+            }
+            else {
+                args[0] += "1";
+            }
+        }
+        else {
+            args[0] += "1";
+        }
+    }
+    //write all URLs to a file --> OVERRIDES FILE!
     errorCount = 0;
-    for (i = 0; i < serverQueue.songs.length; i++) {
+    try {
+        util.overrideFile(pathName + args[0], serverQueue.songs[0].url);
+    }
+    catch (err) {
+        util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + 0 + " | URL: " + serverQueue.songs[0].url + " | Title: " + serverQueue.songs[0].title);
+        message.channel.send("Error while trying to save the url of **" + serverQueue.songs[0].title + "**. Continuing.");
+        errorCount++;
+    }
+    for (i = 1; i < serverQueue.songs.length; i++) {
         try {
-            util.writeLineToFile(pathName + args[0], serverQueue.songs[i].url);
+            util.addLineToFile(pathName + args[0], serverQueue.songs[i].url);
         }
         catch (err) {
-            util.logErr(err, "music: write: writeLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
+            util.logErr(err, "music: write: addLineToFile", "Parameter: " + util.arrToString(args, " ") + " | Nr: " + i + " | URL: " + serverQueue.songs[i].url + " | Title: " + serverQueue.songs[i].title);
             message.channel.send("Error while trying to save the url of **" + serverQueue.songs[i].title + "**. Continuing.");
             errorCount++;
         }

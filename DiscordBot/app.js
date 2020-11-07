@@ -357,6 +357,14 @@ commands = [];
         func: function (message, args) { return mod.kill(message); }
     });
     commands.push({
+        names: ["restore"],
+        parameter: "",
+        description: "Load last queue",
+        longDescription: "Loades the queue the bot saved when the last 'kill' command was executed.",
+        module: "moderator",
+        func: function (message, args) { return mod.restore(message); }
+    });
+    commands.push({
         names: ["rps"],
         parameter: "<r|p|s>",
         description: "Play against the bot!",

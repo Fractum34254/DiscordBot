@@ -95,8 +95,15 @@ function kill(message) {
     return;
 }
 
+function restore(message) {
+    let args = [];
+    args[0] = message.guild.id;
+    music.load(message, args, true);
+}
+
 module.exports = {
     ban: ban,
     purge: purge,
-    kill: kill
+    kill: kill,
+    restore: restore
 }

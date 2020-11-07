@@ -1049,7 +1049,11 @@ function remove(message, args) {
     return message.channel.send("Removed **" + removed[0].title + "** from the queue (was on position " + args[0] + ").");
 }
 
-function load(message, args) {
+function load(message, args, postKill) {
+    let fPathName = pathName;
+    if (postKill) {
+        fPathName = killPathName;
+    }
     //check for guild --> no DMs allowed!
     if (!message.guild) {
         util.logUserError("User was not in a guild: command executed in DM", "music: load", message.author, "Parameter: " + util.arrToString(args, " "));
@@ -1085,7 +1089,7 @@ function load(message, args) {
     var readLineFile = null;
     try {
         readLineFile = objLine.createInterface({
-            input: fs.createReadStream(pathName + args[0]).on('error', err => {
+            input: fs.createReadStream(fPathName + args[0]).on('error', err => {
                 util.logUserError(err, "music: load: fs.createReadStream error handler", message.author, "Parameter: " + util.arrToString(args, " "));
                 return message.channel.send("Could not load " + args[0] + "!");
             })

@@ -324,6 +324,15 @@ commands = [];
         func: function (message, args) { return music.loadShuffled(message, args); }
     });
     commands.push({
+        names: ["memory", "listLists", "mem"],
+        parameter: "",
+        description: "Show saved queues",
+        longDescription: "Lists the names of all available queues. Use load/loadShuffled <listName> to add one to the existing queue!",
+        example: "?memory",
+        module: "music",
+        func: function (message, args) { return music.listLists(message); }
+    });
+    commands.push({
         names: ["ban"],
         parameter: "<user, reason>",
         description: "Ban a user!",

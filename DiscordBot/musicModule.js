@@ -1463,6 +1463,22 @@ function time(message) {
     message.channel.send("Current song time: **" + util.secondsToTimeString(curr) + " min** of **" + util.secondsToTimeString(serverQueue.songs[0].length) + " min** song length!");
 }
 
+function listLists(message) {
+    fs.readdir(pathName, (err, files) => {
+        if (err) {
+            return util.logErr(err, "music: listLists: readdir", "Readdir threw the error");
+        }
+        message.channel.send("Available music queues:");
+        let lists = "";
+        files.forEach((f) => {
+            lists += f;
+            lists += "\n";
+        });
+        message.channel.send(lists);
+        message.channel.send("Use 'load' or 'ls' to play the songs!");
+    });
+}
+
 module.exports = {
     execute: execute,
     vol: vol,
@@ -1489,5 +1505,6 @@ module.exports = {
     link: link,
     finish: finish,
     rejoin: rejoin,
-    time: time
+    time: time,
+    listLists: listLists
 }

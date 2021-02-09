@@ -1413,7 +1413,7 @@ async function addPlaylist(message, args) {
     //request YT-playlist
     var result;
     try {
-        result = await ytpl(args[0], { limit: 0 });
+        result = await ytpl(args[0], { limit: Infinity });
     }
     catch (err) {
         util.logErr(err, "music: addPlaylist: await ytpl", "Parameter: " + util.arrToString(args, " "));
@@ -1422,7 +1422,7 @@ async function addPlaylist(message, args) {
     //loop trough results
     try {
         for (i = 0; i < result.items.length; i++) {
-            playlists.get(message.guild.id).push(result.items[i].url_simple);
+            playlists.get(message.guild.id).push(result.items[i].shortUrl);
         }
     }
     catch (err) {

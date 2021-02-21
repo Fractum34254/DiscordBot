@@ -88,7 +88,7 @@ class ConsoleMessage {
 //Define all commands as objects
 commands = [];
 class Command {
-    constructor(names, parameter, description, longDescription, example, module, func) {
+    constructor(names, parameter, description, longDescription, example, module, func, hide) {
         this.names = names;
         this.parameter = parameter;
         this.description = description;
@@ -96,6 +96,10 @@ class Command {
         this.example = example;
         this.module = module;
         this.func = func;
+        this.hide = hide;
+        if (this.hide === undefined) {
+            this.hide = false;
+        }
     }
     names;
     parameter;
@@ -104,9 +108,10 @@ class Command {
     example;
     module;
     func;
+    hide;
 }
 {
-    commands.push(Command(
+    commands.push(new Command(
         ["info", "i"],
         "",
         "Get Bot info",
@@ -114,7 +119,7 @@ class Command {
         undefined,
         "main",
         function (message, args) { return info(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["help", "h"],
         "[<Module | Command>]",
         "Get help!",
@@ -122,7 +127,7 @@ class Command {
         "?help main music purge ban",
         "main",
         function (message, args) { return help(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["modules", "mod"],
         "",
         "List all modules",
@@ -130,7 +135,7 @@ class Command {
         undefined,
         "main",
         function (message, args) { return listModules(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["play", "add"],
         "<YT-URL>",
         "Add a song",
@@ -138,7 +143,7 @@ class Command {
         "?play https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         "music",
         function (message, args) { return music.execute(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["search"],
         "<query>",
         "Search YouTube",
@@ -146,7 +151,7 @@ class Command {
         "?search PlanetChili Hardware 3D 3\n>> Outputs the first 3 results for this query.",
         "music",
         function (message, args) { return music.search(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["playlist"],
         "<YT-URL>",
         "Add a YT-playlist",
@@ -154,7 +159,7 @@ class Command {
         "?playlist https://www.youtube.com/playlist?list=PL2GCi6aTvU1I5fcBnHQuE1-Cbw-9zXGqb",
         "music",
         function (message, args) { return music.addPlaylist(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["pause", "p"],
         "",
         "Pause",
@@ -162,7 +167,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.pause(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["resume", "res", "continue", "r"],
         "",
         "Resume",
@@ -170,7 +175,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.resume(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["rejoin"],
         "",
         "Rejoin voice channel",
@@ -178,7 +183,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.rejoin(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["skip", "s"],
         "<int = 1>",
         "Skip songs",
@@ -186,7 +191,7 @@ class Command {
         "?skip 3",
         "music",
         function (message, args) { return music.skip(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["unskip", "us"],
         "<int = 1>",
         "Unskip songs",
@@ -194,7 +199,7 @@ class Command {
         "?unskip 2",
         "music",
         function (message, args) { return music.unskip(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["queue", "q"],
         "<page [,endPage]>",
         "List songs",
@@ -202,7 +207,7 @@ class Command {
         "?queue 3 5\n>> Shows page 3 to 5.",
         "music",
         function (message, args) { return music.list(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["volume", "vol", "v"],
         "[<float | res>]",
         "Set/get the volume",
@@ -210,7 +215,7 @@ class Command {
         "?volume 3",
         "music",
         function (message, args) { return music.vol(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["shuffle", "random", "randomize"],
         "",
         "Shuffle",
@@ -218,7 +223,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.shuffle(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["looping", "loop"],
         "[<true/false>]",
         "Set/get looping status",
@@ -226,7 +231,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.setLooping(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["count", "c", "number"],
         "",
         "Count songs",
@@ -234,7 +239,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.count(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["now", "np"],
         "",
         "Show what is live",
@@ -242,7 +247,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.now(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["time", "t"],
         "",
         "Show song timer",
@@ -250,7 +255,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.time(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["link"],
         "<int = 1>",
         "Get a song link",
@@ -258,7 +263,7 @@ class Command {
         "?link 3",
         "music",
         function (message, args) { return music.link(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["again", "replay", "rp"],
         "",
         "Restart song",
@@ -266,7 +271,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.again(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["playnow", "playdirect", "force"],
         "<YT-URL>",
         "Play a song instant",
@@ -274,7 +279,7 @@ class Command {
         "?playnow https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         "music",
         function (message, args) { return music.playDirect(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["who", "requested"],
         "",
         "Who added this?",
@@ -282,7 +287,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.requested(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["remove", "delete", "del"],
         "<int = 1>",
         "Remove a song",
@@ -290,21 +295,22 @@ class Command {
         "?remove 3",
         "music",
         function (message, args) { return music.remove(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["duplicates", "removeDoubles"],
         "",
         "Remove duplicates",
         "Removes all songs with the same URL from the queue.",
+        undefined,
         "music",
         function (message, args) { return music.removeDoubles(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["finish", "end"],
         "",
         "End playing - FINAL!",
         "Deletes queue but keeps the first song. As result, the active song will play to the end and then the bot will stop.",
         "music",
         function (message, args) { return music.finish(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["clear", "cls"],
         "",
         "Delete all - FINAL!",
@@ -312,7 +318,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.clear(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["save", "write"],
         "<name>",
         "Save queue",
@@ -320,7 +326,7 @@ class Command {
         undefined,
         "music",
         function (message, args) { return music.write(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["load", "l"],
         "<name>",
         "Load songs",
@@ -328,7 +334,7 @@ class Command {
         "?load music",
         "music",
         function (message, args) { return music.load(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["loadShuffled", "ls"],
         "<name>",
         "Load songs shuffled",
@@ -336,7 +342,7 @@ class Command {
         "?ls music",
         "music",
         function (message, args) { return music.loadShuffled(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["memory", "listLists", "mem"],
         "",
         "Show saved queues",
@@ -344,7 +350,7 @@ class Command {
         "?memory",
         "music",
         function (message, args) { return music.listLists(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["ban"],
         "<user, reason>",
         "Ban a user!",
@@ -352,7 +358,7 @@ class Command {
         undefined,
         "moderator",
         function (message, args) { return mod.ban(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["purge"],
         "<int>",
         "Delete messages",
@@ -360,7 +366,7 @@ class Command {
         undefined,
         "moderator",
         function (message, args) { return mod.purge(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["kill"],
         "",
         "End bot",
@@ -368,15 +374,16 @@ class Command {
         undefined,
         "moderator",
         function (message, args) { return mod.kill(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["reactionRoles"],
         "[...]",
         "UNSAFE, DO NOT TRY",
         "Addes/Removes roles if a user reacts to a specific message.\nParameter: [rolesToAdd]; [rolesToRemove]; messageID; emoji",
         undefined,
         "moderator",
-        function (message, args) { return mod.reactionRoles(message, args, reactionChecks); }));
-    commands.push(Command(
+        function (message, args) { return mod.reactionRoles(message, args, reactionChecks); },
+        true));
+    commands.push(new Command(
         ["restore"],
         "",
         "Load last queue",
@@ -384,7 +391,7 @@ class Command {
         undefined,
         "moderator",
         function (message, args) { return mod.restore(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["rps"],
         "<r|p|s>",
         "Play against the bot!",
@@ -392,7 +399,7 @@ class Command {
         undefined,
         "fun",
         function (message, args) { return fun.rps(message, args); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["flip"],
         "",
         "Flip a coin",
@@ -400,7 +407,7 @@ class Command {
         undefined,
         "fun",
         function (message, args) { return fun.flip(message); }));
-    commands.push(Command(
+    commands.push(new Command(
         ["randomColor", "randColor", "randomRGB", "randomcolor"],
         "",
         "Get a random color",
@@ -562,25 +569,29 @@ function help(message, args) {
             count = 0;
             for (j = 0; j < commands.length; j++) {
                 found = false;
-                for (k = 0; k < modules[i].names.length && !found; k++) {
-                    if (commands[j].module === modules[i].names[k]) {
-                        count++;
-                        found = true;
-                        name = commands[j].names[0];
-                        name += " ";
-                        name += commands[j].parameter;
-                        list[listCounter] += util.trimString(name, longestName);
-                        list[listCounter] += " - ";
-                        list[listCounter] += util.trimString(commands[j].description, longestDesc);
-                        list[listCounter] += " - ";
-                        list[listCounter] += commands[j].names.slice(1,commands[j].names.length).join(", ");
-                        list[listCounter] += "\n";
-                        if (list[listCounter].length >= 1700) {
-                            listCounter++;
-                            list[listCounter] = "```diff\n";
+                moduleLoop:
+                    for (k = 0; k < modules[i].names.length && !found; k++) {
+                        if (commands[j].hide) {
+                            break moduleLoop;
+                        }
+                        if (commands[j].module === modules[i].names[k]) {
+                            count++;
+                            found = true;
+                            name = commands[j].names[0];
+                            name += " ";
+                            name += commands[j].parameter;
+                            list[listCounter] += util.trimString(name, longestName);
+                            list[listCounter] += " - ";
+                            list[listCounter] += util.trimString(commands[j].description, longestDesc);
+                            list[listCounter] += " - ";
+                            list[listCounter] += commands[j].names.slice(1,commands[j].names.length).join(", ");
+                            list[listCounter] += "\n";
+                            if (list[listCounter].length >= 1700) {
+                                listCounter++;
+                                list[listCounter] = "```diff\n";
+                            }
                         }
                     }
-                }
             }
             text += count;
             text += " commands available +\n";

@@ -80,6 +80,96 @@ function purge(message, args) {
     }
 }
 
+class ReactionCheck {
+    constructor(emoji, addRoles, removeRoles, messageId) {
+        this.emoji = emoji;
+        this.addRoles = addRoles;
+        this.removeRoles = removeRoles;
+        this.messageId = messageId;
+    }
+    async ReactionAdded(msg, inputMember, em) {
+        try {
+            let member = await msg.guild.members.fetch(inputMember.user.id);
+            if (msg.id === messageId) {
+                console.log(addRoles, removeRoles);
+                if (emoji === undefined || emoji === em) {
+                    if (addRoles.length != 0 && addRoles[0] != "") {
+                        member.roles.add(addRoles);
+                    }
+                    if (removeRoles.length != 0 && removeRoles[0] != "") {
+                        member.roles.remove(removeRoles);
+                    }
+                }
+            }
+        }
+        catch (err)
+        {
+            util.logErr(err, "on reaction adding", "None");
+        }
+    }
+    async ReactionRemoved(msg, inputMember, em) {
+        try {
+            let member = await msg.guild.members.fetch(inputMember.user.id);
+            if (msg.id === messageId) {
+                console.log(addRoles, removeRoles);
+                if (emoji === undefined || emoji === em) {
+                    if (addRoles.length != 0 && addRoles[0] != "") {
+                        member.roles.remove(addRoles);
+                    }
+                    if (removeRoles.length != 0 && removeRoles[0] != "") {
+                        member.roles.add(removeRoles);
+                    }
+                }
+            }
+        }
+        catch (err) {
+            util.logErr(err, "on reaction adding", "None");
+        }
+    }
+    emoji;
+    addRoles;
+    removeRoles;
+    messageId;
+}
+
+async function reactionRoles(message, args, reactionChecks) {
+    //put arguments back together without whitespaces (we need advanced methods to tell the arguments apart)
+    args = args.join('');
+    args = args.split(';');
+    while (args.length < 4) {
+        args.push("");
+    }
+    addRoles = args[0].split(',');
+    removeRoles = args[1].split(',');
+    messageId = args[2];
+    emoji = args[3];
+    //delete initiating message
+    message.delete();
+    //check for unknown parameters
+    if (emoji === "") {
+        emoji = undefined;
+    }
+    if (addRoles[0] === "" || addRoles === undefined) {
+        addRoles = [];
+    }
+    if (removeRoles[0] === "" || removeRoles === undefined) {
+        removeRoles = [];
+    }
+    if (messageId === "" || messageId === undefined) {
+        try {
+            fetchedMsg = await message.channel.messages.fetch({ limit: 1 });
+            messageId = fetchedMsg.first().id;
+        }
+        catch (err) {
+            util.logErr(err, "moderator: reactionRoles: replace empty message ID", "Parameter: " + util.arrToString(args, ";"));
+            return message.channel.send("Unable to add the reaction event, missing message ID!");
+        }
+    }
+    rc = new ReactionCheck(emoji, addRoles, removeRoles, messageId);
+    reactionChecks.push(rc);
+    return message.channel.send(`Succesfully added reaction event`).then(msg => { msg.delete({ timeout: 3000 }) });
+}
+
 function kill(message) {
     if (message.author.id != "292056469384331276") {
         util.logUserError("User tried to terminate Bot but did not have the right to do so.", "moderator: kill", message.author, "None");
@@ -105,5 +195,6 @@ module.exports = {
     ban: ban,
     purge: purge,
     kill: kill,
-    restore: restore
+    restore: restore,
+    reactionRoles: reactionRoles
 }

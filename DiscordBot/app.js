@@ -8,22 +8,32 @@ const fun = require('./funModule.js');
 const util = require('./Utility.js');
 const mod = require('./moderatorModule.js');
 
+const EventEmitter = require('events');
+class OwnEvent extends EventEmitter { }
+const globalEvents = new OwnEvent();
+
 const readline = require('readline');
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+var reactionChecks = [];
 
 //Error handling - last instance
 process.on('uncaughtException', (err, origin) => {
     // inform Devs on origin server
     // Send the message to a designated channel on the server:
     const guild = client.guilds.resolve('688081153361576013');
-    const channel = guild.channels.cache.find(ch => ch.name === 'dev-chat');
-    // Do nothing if the channel wasn't found on this server
-    if (!channel) {
-        util.logErr("Did not find channel 'dev-chat' while trying to inform about crash!", "main: uncaughtException listener", "You missed an exception case somewhere!");
+    if (!guild) {
+        util.logErr("Did not find guild '688081153361576013' while trying to inform about crash!", "main: uncaughtException listener", "You missed an exception case somewhere!");
     }
     else {
-        // Send the message, mentioning the Devs
-        channel.send(`The bot caught an horrible exception. ${guild.roles.resolve('688091839643123728')}s check the console!`);
+        const channel = guild.channels.cache.find(ch => ch.name === 'dev-chat');
+        // Do nothing if the channel wasn't found on this server
+        if (!channel) {
+            util.logErr("Did not find channel 'dev-chat' while trying to inform about crash!", "main: uncaughtException listener", "You missed an exception case somewhere!");
+        }
+        else {
+            // Send the message, mentioning the Devs
+            channel.send(`The bot caught an horrible exception. ${guild.roles.resolve('688091839643123728')}s check the console!`);
+        }
     }
     return util.logErr(err, "main: uncaughtException handler", origin);
 });
@@ -357,6 +367,14 @@ commands = [];
         func: function (message, args) { return mod.kill(message); }
     });
     commands.push({
+        names: ["reactionRoles"],
+        parameter: "[...]",
+        description: "UNSAFE, DO NOT TRY",
+        longDescription: "Addes/Removes roles if a user reacts to a specific message.\nParameter: [rolesToAdd]; [rolesToRemove]; messageID; emoji",
+        module: "moderator",
+        func: function (message, args) { return mod.reactionRoles(message, args, reactionChecks); }
+    });
+    commands.push({
         names: ["restore"],
         parameter: "",
         description: "Load last queue",
@@ -536,7 +554,9 @@ function help(message, args) {
             text += modules[i].description;
             text += " +\n+ Currently, there are ";
             //count all commands that are attached to this module and contain them in a seperate text
-            list = "";
+            let list = [];
+            list[0] = "";
+            let listCounter = 0;
             count = 0;
             for (j = 0; j < commands.length; j++) {
                 found = false;
@@ -547,18 +567,16 @@ function help(message, args) {
                         name = commands[j].names[0];
                         name += " ";
                         name += commands[j].parameter;
-                        list += util.trimString(name, longestName);
-                        list += " - ";
-                        list += util.trimString(commands[j].description, longestDesc);
-                        list += " - ";
-                        if (commands[j].names.length >= 2) {
-                            list += commands[j].names[1];
-                            for (n = 2; n < commands[j].names.length; n++) {
-                                list += ", ";
-                                list += commands[j].names[n];
-                            }
+                        list[listCounter] += util.trimString(name, longestName);
+                        list[listCounter] += " - ";
+                        list[listCounter] += util.trimString(commands[j].description, longestDesc);
+                        list[listCounter] += " - ";
+                        list[listCounter] += commands[j].names.slice(1,commands[j].names.length).join(", ");
+                        list[listCounter] += "\n";
+                        if (list[listCounter].length >= 1700) {
+                            listCounter++;
+                            list[listCounter] = "```diff\n";
                         }
-                        list += "\n";
                     }
                 }
             }
@@ -568,10 +586,18 @@ function help(message, args) {
             text += util.trimString("Description", longestDesc + 3);
             text += "Aliases\n";
             //attach command list
-            text += list;
+            text += list[0];
             text += "```";
             //send text
             message.channel.send(text);
+            //send all other blocks
+            list.splice(0, 1);
+            for (block in list) {
+                if (list[block] != "```diff\n") {
+                    list[block] += "```";
+                    message.channel.send(list[block]);
+                }
+            }
         }
         else {
             //create embed
@@ -638,7 +664,6 @@ client.on("message", async message => {
         //no command found --> error
         args.unshift(first);
         util.logUserError("User did not enter a valid command.", "message listener", message.author, "Parameter: " + util.arrToString(args, " "));
-        message.channel.send("Please enter a valid command!");
     }
     catch (err) {
         util.logErr(err, "message listener: final catch embrace", "None");
@@ -662,6 +687,44 @@ client.on('guildMemberAdd', member => {
 
 //VERY IMPORTANT TO CALL THESE!!
 client.login(token);
+
+//look for raw input for reaction emojis
+client.on('raw', packet => {
+    // We don't want this to run on unrelated packets
+    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
+    // Grab the channel to check the message from
+    try {
+        client.channels.fetch(packet.d.channel_id).then(channel => {
+            // Since we have confirmed the message is not cached, let's fetch it
+            channel.messages.fetch(packet.d.message_id).then(message => {
+                // Check which type of event it is before emitting
+                if (packet.t === 'MESSAGE_REACTION_ADD') {
+                    globalEvents.emit('messageReactionAddCustom', packet.d.emoji.name, packet.d.member, message);
+                }
+                if (packet.t === 'MESSAGE_REACTION_REMOVE') {
+                    message.guild.members.fetch(packet.d.user_id).then(member => {
+                        globalEvents.emit('messageReactionRemoveCustom', packet.d.emoji.name, member, message);
+                    });
+                }
+            });
+        });
+    }
+    catch (err) {
+        util.logErr(err, "on raw packet", "None");
+    };
+});
+
+globalEvents.on('messageReactionAddCustom', (reaction, user, msg) => {
+    reactionChecks.forEach(item => {
+        item.ReactionAdded(msg, user, reaction);
+    });
+});
+
+globalEvents.on('messageReactionRemoveCustom', (reaction, user, msg) => {
+    reactionChecks.forEach(item => {
+        item.ReactionRemoved(msg, user, reaction);
+    });
+});
 
 //Look for console input
 rl.on('line', (input) => {

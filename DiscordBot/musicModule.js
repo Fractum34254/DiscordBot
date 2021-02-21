@@ -182,7 +182,7 @@ function play(message) {
     //play music!
     try {
         serverQueue.songs[0].startTime = Date.now();
-        serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { quality: 'highestaudio', filter: 'audioonly' })
+        serverQueue.connection.play(ytdl(serverQueue.songs[0].url, { filter: 'audioonly', dlChunkSize: 0 })
             .on("error", err => {
                 //log Error and inform users
                 util.logErr(err, "music: play: ytdl-stream: on error", "URL: " + serverQueue.songs[0].url);
@@ -238,7 +238,7 @@ function play(message) {
     }
     serverQueue.connection.dispatcher.setVolumeDecibels(-9.0);
     serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.connection.dispatcher.volumeLogarithmic * serverQueue.volume / 5.0);
-    message.channel.send(`Start playing: **${serverQueue.songs[0].title}**!`);
+    message.channel.send(`Start playing: **${serverQueue.songs[0].title}** (` + util.secondsToTimeString(serverQueue.songs[0].length min) +`)!`);
 }
 
 async function playDirect(message, args) {

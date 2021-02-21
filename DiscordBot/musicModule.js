@@ -238,7 +238,7 @@ function play(message) {
     }
     serverQueue.connection.dispatcher.setVolumeDecibels(-9.0);
     serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.connection.dispatcher.volumeLogarithmic * serverQueue.volume / 5.0);
-    message.channel.send(`Start playing: **${serverQueue.songs[0].title}** (` + util.secondsToTimeString(serverQueue.songs[0].length min) +`)!`);
+    message.channel.send(`Start playing: **${serverQueue.songs[0].title}** (` + util.secondsToTimeString(serverQueue.songs[0].length) +` min)!`);
 }
 
 async function playDirect(message, args) {

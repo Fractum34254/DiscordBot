@@ -87,325 +87,327 @@ class ConsoleMessage {
 
 //Define all commands as objects
 commands = [];
+class Command {
+    constructor(names, parameter, description, longDescription, example, module, func) {
+        this.names = names;
+        this.parameter = parameter;
+        this.description = description;
+        this.longDescription = longDescription;
+        this.example = example;
+        this.module = module;
+        this.func = func;
+    }
+    names;
+    parameter;
+    description;
+    longDescription;
+    example;
+    module;
+    func;
+}
 {
-    commands.push({
-        names: ["info", "i"],
-        parameter: "",
-        description: "Get Bot info",
-        longDescription: "Lists the GitHub link to the source code and provides a link so you can add the bot to your own server.",
-        module: "main",
-        func: function (message, args) { return info(message); }
-    });
-    commands.push({
-        names: ["help", "h"],
-        parameter: "[<Module | Command>]",
-        description: "Get help!",
-        longDescription: "If you enter a module, this command shows all affiliated commands in a list.\nIf you enter a command, an info embed will pop up.\nYou can enter multiple modules/commands (also mixed together) by separating them with spaces.\nDefaults to 'all', which lists all commands.",
-        example: "?help main music purge ban",
-        module: "main",
-        func: function (message, args) { return help(message, args); }
-    });
-    commands.push({
-        names: ["modules", "mod"],
-        parameter: "",
-        description: "List all modules",
-        longDescription: "Lists all available modules you can request via the help function.",
-        module: "main",
-        func: function (message, args) { return listModules(message); }
-    });
-    commands.push({
-        names: ["play", "add"],
-        parameter: "<YT-URL>",
-        description: "Add a song",
-        longDescription: "Adds a song to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
-        example: "?play https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        module: "music",
-        func: function (message, args) { return music.execute(message, args); }
-    });
-    commands.push({
-        names: ["search"],
-        parameter: "<query>",
-        description: "Search YouTube",
-        longDescription: "Lists the first results of a youtube search.\nIf you enter a number as last argument, the function takes this as the number of results it will show. Default is 5.",
-        example: "?search PlanetChili Hardware 3D 3\n>> Outputs the first 3 results for this query.",
-        module: "music",
-        func: function (message, args) { return music.search(message, args); }
-    });
-    commands.push({
-        names: ["playlist"],
-        parameter: "<YT-URL>",
-        description: "Add a YT-playlist",
-        longDescription: "Adds an entire YouTube-playlist to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
-        example: "?playlist https://www.youtube.com/playlist?list=PL2GCi6aTvU1I5fcBnHQuE1-Cbw-9zXGqb",
-        module: "music",
-        func: function (message, args) { return music.addPlaylist(message, args); }
-    });
-    commands.push({
-        names: ["pause", "p"],
-        parameter: "",
-        description: "Pause",
-        longDescription: "Immediatly pauses the music. Type '?resume' to continue.",
-        module: "music",
-        func: function (message, args) { return music.pause(message); }
-    });
-    commands.push({
-        names: ["resume", "res", "continue", "r"],
-        parameter: "",
-        description: "Resume",
-        longDescription: "Use this to continue playing after the music is paused.",
-        module: "music",
-        func: function (message, args) { return music.resume(message); }
-    });
-    commands.push({
-        names: ["rejoin"],
-        parameter: "",
-        description: "Rejoin voice channel",
-        longDescription: "If the bot drops out due to unknown reasons, try this to bring it back in.\nDespite best effort, this function often does not help.",
-        module: "music",
-        func: function (message, args) { return music.rejoin(message); }
-    });
-    commands.push({
-        names: ["skip", "s"],
-        parameter: "<int = 1>",
-        description: "Skip songs",
-        longDescription: "Skip one or more songs. The parameter dictates how many songs you will be skipping.",
-        example: "?skip 3",
-        module: "music",
-        func: function (message, args) { return music.skip(message, args); }
-    });
-    commands.push({
-        names: ["unskip", "us"],
-        parameter: "<int = 1>",
-        description: "Unskip songs",
-        longDescription: "Skipped too much? Bot wasn't able to play the song? Unskip multiple songs to bring the back of the queue in front.",
-        example: "?unskip 2",
-        module: "music",
-        func: function (message, args) { return music.unskip(message, args); }
-    });
-    commands.push({
-        names: ["queue", "q"],
-        parameter: "<page [,endPage]>",
-        description: "List songs",
-        longDescription: "List pages of the queue. A page contains 10 songs. Default is one.\nTo list the entire queue, enter 'all'.",
-        example: "?queue 3 5\n>> Shows page 3 to 5.",
-        module: "music",
-        func: function (message, args) { return music.list(message, args); }
-    });
-    commands.push({
-        names: ["volume", "vol", "v"],
-        parameter: "[<float | res>]",
-        description: "Set/get the volume",
-        longDescription: "If you enter a number, this function sets the volume to this number.\nIf no number is entered, returns the active volume.\nIf you enter 'res', sets default (5).",
-        example: "?volume 3",
-        module: "music",
-        func: function (message, args) { return music.vol(message, args); }
-    });
-    commands.push({
-        names: ["shuffle", "random", "randomize"],
-        parameter: "",
-        description: "Shuffle",
-        longDescription: "Change your monotone playlist to enjoy a better mix!",
-        module: "music",
-        func: function (message, args) { return music.shuffle(message); }
-    });
-    commands.push({
-        names: ["looping", "loop"],
-        parameter: "[<true/false>]",
-        description: "Set/get looping status",
-        longDescription: "Looping determines whether a played song is discarded or added at the end of the queue.\nEnter 'true' or 'false' to set the looping status. If no parameter is entered, returns the active status. Default is true.",
-        module: "music",
-        func: function (message, args) { return music.setLooping(message, args); }
-    });
-    commands.push({
-        names: ["count", "c", "number"],
-        parameter: "",
-        description: "Count songs",
-        longDescription: "Counts, how many songs there are in queue.",
-        module: "music",
-        func: function (message, args) { return music.count(message); }
-    });
-    commands.push({
-        names: ["now", "np"],
-        parameter: "",
-        description: "Show what is live",
-        longDescription: "Returns the title of the songs that is currently being played. To get a link, type '?link'.\nTo get who added the song, type '?who'.",
-        module: "music",
-        func: function (message, args) { return music.now(message); }
-    });
-    commands.push({
-        names: ["time", "t"],
-        parameter: "",
-        description: "Show song timer",
-        longDescription: "Displays the elapsed time of the song as well as the entire song length.",
-        module: "music",
-        func: function (message, args) { return music.time(message); }
-    });
-    commands.push({
-        names: ["link"],
-        parameter: "<int = 1>",
-        description: "Get a song link",
-        longDescription: "Returns the link of a song. Your parameter specifies, which one: enter a queue position. Defaults to the current song (1).",
-        example: "?link 3",
-        module: "music",
-        func: function (message, args) { return music.link(message, args); }
-    });
-    commands.push({
-        names: ["again", "replay", "rp"],
-        parameter: "",
-        description: "Restart song",
-        longDescription: "Rewind time and start playing the currently live song again.",
-        module: "music",
-        func: function (message, args) { return music.again(message); }
-    });
-    commands.push({
-        names: ["playnow", "playdirect", "force"],
-        parameter: "<YT-URL>",
-        description: "Play a song instant",
-        longDescription: "Pushes URL to the front of the queue, ends current track (will then be 2nd place in the queue) and starts playing this requested song.",
-        example: "?playnow https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        module: "music",
-        func: function (message, args) { return music.playDirect(message, args); }
-    });
-    commands.push({
-        names: ["who", "requested"],
-        parameter: "",
-        description: "Who added this?",
-        longDescription: "Displays and tags the user who added the song that is currently being played.",
-        module: "music",
-        func: function (message, args) { return music.requested(message); }
-    });
-    commands.push({
-        names: ["remove", "delete", "del"],
-        parameter: "<int = 1>",
-        description: "Remove a song",
-        longDescription: "Completely deletes a song from the queue. Your parameter is the queue position, the default is the song that is live.\nAttention if you want to remove multiple songs: This shifts songs that were positioned after this song one place to the front. To be safe, remove songs in descending order.",
-        example: "?remove 3",
-        module: "music",
-        func: function (message, args) { return music.remove(message, args); }
-    });
-    commands.push({
-        names: ["duplicates", "removeDoubles"],
-        parameter: "",
-        description: "Remove duplicates",
-        longDescription: "Removes all songs with the same URL from the queue.",
-        module: "music",
-        func: function (message, args) { return music.removeDoubles(message); }
-    });
-    commands.push({
-        names: ["finish", "end"],
-        parameter: "",
-        description: "End playing - FINAL!",
-        longDescription: "Deletes queue but keeps the first song. As result, the active song will play to the end and then the bot will stop.",
-        module: "music",
-        func: function (message, args) { return music.finish(message); }
-    });
-    commands.push({
-        names: ["clear", "cls"],
-        parameter: "",
-        description: "Delete all - FINAL!",
-        longDescription: "Removes everything, ends currently playing track and drops out of the voice channel.",
-        module: "music",
-        func: function (message, args) { return music.clear(message); }
-    });
-    commands.push({
-        names: ["save", "write"],
-        parameter: "<name>",
-        description: "Save queue",
-        longDescription: "If there is no save with this name, creates a new file and writes the URLs.\nIf there is a save with this name, adds the URLs to that save.",
-        module: "music",
-        func: function (message, args) { return music.write(message, args); }
-    });
-    commands.push({
-        names: ["load", "l"],
-        parameter: "<name>",
-        description: "Load songs",
-        longDescription: "Loads a previously saved file. Adds all songs to the queue (does not delete it).",
-        example: "?load music",
-        module: "music",
-        func: function (message, args) { return music.load(message, args); }
-    });
-    commands.push({
-        names: ["loadShuffled", "ls"],
-        parameter: "<name>",
-        description: "Load songs shuffled",
-        longDescription: "Loads a previously saved file. Adds all songs to the queue (does not delete it). Shuffles them before adding.",
-        example: "?ls music",
-        module: "music",
-        func: function (message, args) { return music.loadShuffled(message, args); }
-    });
-    commands.push({
-        names: ["memory", "listLists", "mem"],
-        parameter: "",
-        description: "Show saved queues",
-        longDescription: "Lists the names of all available queues. Use load/loadShuffled <listName> to add one to the existing queue!",
-        example: "?memory",
-        module: "music",
-        func: function (message, args) { return music.listLists(message); }
-    });
-    commands.push({
-        names: ["ban"],
-        parameter: "<user, reason>",
-        description: "Ban a user!",
-        longDescription: "Bans a user from the entire Discord Server. You need the permissions to evoke this command.",
-        module: "moderator",
-        func: function (message, args) { return mod.ban(message, args); }
-    });
-    commands.push({
-        names: ["purge"],
-        parameter: "<int>",
-        description: "Delete messages",
-        longDescription: "Deletes the last messages, you can enter up to 99. You need the permission to manage messages.",
-        module: "moderator",
-        func: function (message, args) { return mod.purge(message, args); }
-    });
-    commands.push({
-        names: ["kill"],
-        parameter: "",
-        description: "End bot",
-        longDescription: "Terminates the process of the bot completely. Only available to whitelisted users. Saves the current queue. Restore after restart via 'restore'.",
-        module: "moderator",
-        func: function (message, args) { return mod.kill(message); }
-    });
-    commands.push({
-        names: ["reactionRoles"],
-        parameter: "[...]",
-        description: "UNSAFE, DO NOT TRY",
-        longDescription: "Addes/Removes roles if a user reacts to a specific message.\nParameter: [rolesToAdd]; [rolesToRemove]; messageID; emoji",
-        module: "moderator",
-        func: function (message, args) { return mod.reactionRoles(message, args, reactionChecks); }
-    });
-    commands.push({
-        names: ["restore"],
-        parameter: "",
-        description: "Load last queue",
-        longDescription: "Loades the queue the bot saved when the last 'kill' command was executed.",
-        module: "moderator",
-        func: function (message, args) { return mod.restore(message); }
-    });
-    commands.push({
-        names: ["rps"],
-        parameter: "<r|p|s>",
-        description: "Play against the bot!",
-        longDescription: "Plays rock, paper, scissors against the bot.",
-        module: "fun",
-        func: function (message, args) { return fun.rps(message, args); }
-    });
-    commands.push({
-        names: ["flip"],
-        parameter: "",
-        description: "Flip a coin",
-        longDescription: "Will result in Heads (50%) or Tails (50%). If you need to make a decision...",
-        module: "fun",
-        func: function (message, args) { return fun.flip(message); }
-    });
-    commands.push({
-        names: ["randomColor", "randColor", "randomRGB", "randomcolor"],
-        parameter: "",
-        description: "Get a random color",
-        longDescription: "Displays an embed filled with RGB and hex code to a random color.",
-        module: "fun",
-        func: function (message, args) { return fun.randomColor(message); }
-    });
+    commands.push(Command(
+        ["info", "i"],
+        "",
+        "Get Bot info",
+        "Lists the GitHub link to the source code and provides a link so you can add the bot to your own server.",
+        undefined,
+        "main",
+        function (message, args) { return info(message); }));
+    commands.push(Command(
+        ["help", "h"],
+        "[<Module | Command>]",
+        "Get help!",
+        "If you enter a module, this command shows all affiliated commands in a list.\nIf you enter a command, an info embed will pop up.\nYou can enter multiple modules/commands (also mixed together) by separating them with spaces.\nDefaults to 'all', which lists all commands.",
+        "?help main music purge ban",
+        "main",
+        function (message, args) { return help(message, args); }));
+    commands.push(Command(
+        ["modules", "mod"],
+        "",
+        "List all modules",
+        "Lists all available modules you can request via the help function.",
+        undefined,
+        "main",
+        function (message, args) { return listModules(message); }));
+    commands.push(Command(
+        ["play", "add"],
+        "<YT-URL>",
+        "Add a song",
+        "Adds a song to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
+        "?play https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "music",
+        function (message, args) { return music.execute(message, args); }));
+    commands.push(Command(
+        ["search"],
+        "<query>",
+        "Search YouTube",
+        "Lists the first results of a youtube search.\nIf you enter a number as last argument, the function takes this as the number of results it will show. Default is 5.",
+        "?search PlanetChili Hardware 3D 3\n>> Outputs the first 3 results for this query.",
+        "music",
+        function (message, args) { return music.search(message, args); }));
+    commands.push(Command(
+        ["playlist"],
+        "<YT-URL>",
+        "Add a YT-playlist",
+        "Adds an entire YouTube-playlist to the queue. If no queue exists, enters your voice channel (you have to be in one!) and starts playing.",
+        "?playlist https://www.youtube.com/playlist?list=PL2GCi6aTvU1I5fcBnHQuE1-Cbw-9zXGqb",
+        "music",
+        function (message, args) { return music.addPlaylist(message, args); }));
+    commands.push(Command(
+        ["pause", "p"],
+        "",
+        "Pause",
+        "Immediatly pauses the music. Type '?resume' to continue.",
+        undefined,
+        "music",
+        function (message, args) { return music.pause(message); }));
+    commands.push(Command(
+        ["resume", "res", "continue", "r"],
+        "",
+        "Resume",
+        "Use this to continue playing after the music is paused.",
+        undefined,
+        "music",
+        function (message, args) { return music.resume(message); }));
+    commands.push(Command(
+        ["rejoin"],
+        "",
+        "Rejoin voice channel",
+        "If the bot drops out due to unknown reasons, try this to bring it back in.\nDespite best effort, this function often does not help.",
+        undefined,
+        "music",
+        function (message, args) { return music.rejoin(message); }));
+    commands.push(Command(
+        ["skip", "s"],
+        "<int = 1>",
+        "Skip songs",
+        "Skip one or more songs. The parameter dictates how many songs you will be skipping.",
+        "?skip 3",
+        "music",
+        function (message, args) { return music.skip(message, args); }));
+    commands.push(Command(
+        ["unskip", "us"],
+        "<int = 1>",
+        "Unskip songs",
+        "Skipped too much? Bot wasn't able to play the song? Unskip multiple songs to bring the back of the queue in front.",
+        "?unskip 2",
+        "music",
+        function (message, args) { return music.unskip(message, args); }));
+    commands.push(Command(
+        ["queue", "q"],
+        "<page [,endPage]>",
+        "List songs",
+        "List pages of the queue. A page contains 10 songs. Default is one.\nTo list the entire queue, enter 'all'.",
+        "?queue 3 5\n>> Shows page 3 to 5.",
+        "music",
+        function (message, args) { return music.list(message, args); }));
+    commands.push(Command(
+        ["volume", "vol", "v"],
+        "[<float | res>]",
+        "Set/get the volume",
+        "If you enter a number, this function sets the volume to this number.\nIf no number is entered, returns the active volume.\nIf you enter 'res', sets default (5).",
+        "?volume 3",
+        "music",
+        function (message, args) { return music.vol(message, args); }));
+    commands.push(Command(
+        ["shuffle", "random", "randomize"],
+        "",
+        "Shuffle",
+        "Change your monotone playlist to enjoy a better mix!",
+        undefined,
+        "music",
+        function (message, args) { return music.shuffle(message); }));
+    commands.push(Command(
+        ["looping", "loop"],
+        "[<true/false>]",
+        "Set/get looping status",
+        "Looping determines whether a played song is discarded or added at the end of the queue.\nEnter 'true' or 'false' to set the looping status. If no parameter is entered, returns the active status. Default is true.",
+        undefined,
+        "music",
+        function (message, args) { return music.setLooping(message, args); }));
+    commands.push(Command(
+        ["count", "c", "number"],
+        "",
+        "Count songs",
+        "Counts, how many songs there are in queue.",
+        undefined,
+        "music",
+        function (message, args) { return music.count(message); }));
+    commands.push(Command(
+        ["now", "np"],
+        "",
+        "Show what is live",
+        "Returns the title of the songs that is currently being played. To get a link, type '?link'.\nTo get who added the song, type '?who'.",
+        undefined,
+        "music",
+        function (message, args) { return music.now(message); }));
+    commands.push(Command(
+        ["time", "t"],
+        "",
+        "Show song timer",
+        "Displays the elapsed time of the song as well as the entire song length.",
+        undefined,
+        "music",
+        function (message, args) { return music.time(message); }));
+    commands.push(Command(
+        ["link"],
+        "<int = 1>",
+        "Get a song link",
+        "Returns the link of a song. Your parameter specifies, which one: enter a queue position. Defaults to the current song (1).",
+        "?link 3",
+        "music",
+        function (message, args) { return music.link(message, args); }));
+    commands.push(Command(
+        ["again", "replay", "rp"],
+        "",
+        "Restart song",
+        "Rewind time and start playing the currently live song again.",
+        undefined,
+        "music",
+        function (message, args) { return music.again(message); }));
+    commands.push(Command(
+        ["playnow", "playdirect", "force"],
+        "<YT-URL>",
+        "Play a song instant",
+        "Pushes URL to the front of the queue, ends current track (will then be 2nd place in the queue) and starts playing this requested song.",
+        "?playnow https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "music",
+        function (message, args) { return music.playDirect(message, args); }));
+    commands.push(Command(
+        ["who", "requested"],
+        "",
+        "Who added this?",
+        "Displays and tags the user who added the song that is currently being played.",
+        undefined,
+        "music",
+        function (message, args) { return music.requested(message); }));
+    commands.push(Command(
+        ["remove", "delete", "del"],
+        "<int = 1>",
+        "Remove a song",
+        "Completely deletes a song from the queue. Your parameter is the queue position, the default is the song that is live.\nAttention if you want to remove multiple songs: This shifts songs that were positioned after this song one place to the front. To be safe, remove songs in descending order.",
+        "?remove 3",
+        "music",
+        function (message, args) { return music.remove(message, args); }));
+    commands.push(Command(
+        ["duplicates", "removeDoubles"],
+        "",
+        "Remove duplicates",
+        "Removes all songs with the same URL from the queue.",
+        "music",
+        function (message, args) { return music.removeDoubles(message); }));
+    commands.push(Command(
+        ["finish", "end"],
+        "",
+        "End playing - FINAL!",
+        "Deletes queue but keeps the first song. As result, the active song will play to the end and then the bot will stop.",
+        "music",
+        function (message, args) { return music.finish(message); }));
+    commands.push(Command(
+        ["clear", "cls"],
+        "",
+        "Delete all - FINAL!",
+        "Removes everything, ends currently playing track and drops out of the voice channel.",
+        undefined,
+        "music",
+        function (message, args) { return music.clear(message); }));
+    commands.push(Command(
+        ["save", "write"],
+        "<name>",
+        "Save queue",
+        "If there is no save with this name, creates a new file and writes the URLs.\nIf there is a save with this name, adds the URLs to that save.",
+        undefined,
+        "music",
+        function (message, args) { return music.write(message, args); }));
+    commands.push(Command(
+        ["load", "l"],
+        "<name>",
+        "Load songs",
+        "Loads a previously saved file. Adds all songs to the queue (does not delete it).",
+        "?load music",
+        "music",
+        function (message, args) { return music.load(message, args); }));
+    commands.push(Command(
+        ["loadShuffled", "ls"],
+        "<name>",
+        "Load songs shuffled",
+        "Loads a previously saved file. Adds all songs to the queue (does not delete it). Shuffles them before adding.",
+        "?ls music",
+        "music",
+        function (message, args) { return music.loadShuffled(message, args); }));
+    commands.push(Command(
+        ["memory", "listLists", "mem"],
+        "",
+        "Show saved queues",
+        "Lists the names of all available queues. Use load/loadShuffled <listName> to add one to the existing queue!",
+        "?memory",
+        "music",
+        function (message, args) { return music.listLists(message); }));
+    commands.push(Command(
+        ["ban"],
+        "<user, reason>",
+        "Ban a user!",
+        "Bans a user from the entire Discord Server. You need the permissions to evoke this command.",
+        undefined,
+        "moderator",
+        function (message, args) { return mod.ban(message, args); }));
+    commands.push(Command(
+        ["purge"],
+        "<int>",
+        "Delete messages",
+        "Deletes the last messages, you can enter up to 99. You need the permission to manage messages.",
+        undefined,
+        "moderator",
+        function (message, args) { return mod.purge(message, args); }));
+    commands.push(Command(
+        ["kill"],
+        "",
+        "End bot",
+        "Terminates the process of the bot completely. Only available to whitelisted users. Saves the current queue. Restore after restart via 'restore'.",
+        undefined,
+        "moderator",
+        function (message, args) { return mod.kill(message); }));
+    commands.push(Command(
+        ["reactionRoles"],
+        "[...]",
+        "UNSAFE, DO NOT TRY",
+        "Addes/Removes roles if a user reacts to a specific message.\nParameter: [rolesToAdd]; [rolesToRemove]; messageID; emoji",
+        undefined,
+        "moderator",
+        function (message, args) { return mod.reactionRoles(message, args, reactionChecks); }));
+    commands.push(Command(
+        ["restore"],
+        "",
+        "Load last queue",
+        "Loades the queue the bot saved when the last 'kill' command was executed.",
+        undefined,
+        "moderator",
+        function (message, args) { return mod.restore(message); }));
+    commands.push(Command(
+        ["rps"],
+        "<r|p|s>",
+        "Play against the bot!",
+        "Plays rock, paper, scissors against the bot.",
+        undefined,
+        "fun",
+        function (message, args) { return fun.rps(message, args); }));
+    commands.push(Command(
+        ["flip"],
+        "",
+        "Flip a coin",
+        "Will result in Heads (50%) or Tails (50%). If you need to make a decision...",
+        undefined,
+        "fun",
+        function (message, args) { return fun.flip(message); }));
+    commands.push(Command(
+        ["randomColor", "randColor", "randomRGB", "randomcolor"],
+        "",
+        "Get a random color",
+        "Displays an embed filled with RGB and hex code to a random color.",
+        undefined,
+        "fun",
+        function (message, args) { return fun.randomColor(message); }));
 }
 
 //Define all modules as objects

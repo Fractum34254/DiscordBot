@@ -308,6 +308,7 @@ class Command {
         "",
         "End playing - FINAL!",
         "Deletes queue but keeps the first song. As result, the active song will play to the end and then the bot will stop.",
+        undefined,
         "music",
         function (message, args) { return music.finish(message); }));
     commands.push(new Command(

@@ -1,37 +1,44 @@
-﻿//Node.js: File module
+﻿//********************************** INCLUDES **********************************//
 const fs = require('fs');
 const os = require("os");
-const path = require('path');
-const objLine = require('readline');
 
-function logErr(err, position, info) {
-    var cDate = new Date();
-    console.log('\n\x1b[31m%s\x1b[0m', '----------------------------[ERROR]-----------------------------');
-    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
-    console.log(err);
-    console.log("[Additional Information] " + info);
-    console.log('\n\x1b[31m%s\x1b[0m', '---------------------------[ERROR END]--------------------------');
+//***************************** STRING MANIPULATION *****************************//
+module.exports.centerString = function centerString(str, len, pad = "=") {
+    addLen = (len - str.length) / 2
+    str.padStart(addLen, pad)
+    str.padEnd(addLen, pad)
+    return str
 }
 
-function logInfo(info, position, addInfo) {
-    var cDate = new Date();
-    console.log("\n\x1b[32m%s\x1b[0m", "-----------------------------[INFO]-----------------------------");
-    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[MESSAGE]");
-    console.log(info);
-    console.log("[Additional Information] " + addInfo);
-    console.log("\n\x1b[32m%s\x1b[0m", "---------------------------[INFO END]---------------------------");
+module.exports.trimString = function trimString(str, length, token = " ") {
+    str = str.slice(0, length)
+    str = str.padEnd(length, token)
+    return str;
 }
 
-function logUserError(warn, position, user, info) {
-    var cDate = new Date();
-    console.log("\n\x1b[33m%s\x1b[0m", "--------------------------[USER ERROR]--------------------------");
-    console.log("[POSITION] " + position + "\n[TIME]     " + cDate.toString() + "\n[USER]     " + user.tag  + "\n[MESSAGE]");
-    console.log(warn);
-    console.log("[Additional Information] " + info);
-    console.log("\n\x1b[33m%s\x1b[0m", "------------------------[USER ERROR END]------------------------");
+module.exports.trimStringFront = function trimStringFront(str, length, token = " ") {
+    str = str.slice(-length)
+    str = str.padStart(length, token)
+    return str;
 }
 
-function randomize(array) {
+module.exports.arrToString = function arrToString(arr, spacing = " ") {
+    let str = arr[0]
+    for (let i = 1; i < arr.length; i++) {
+        str += spacing
+        str += arr[i]
+    }
+    return (typeof str === 'undefined') ? "" : str;
+}
+
+module.exports.secondsToTimeString = function secondsToTimeString(sec) {
+    const min = Math.floor(sec / 60)
+    sec -= min * 60
+    return (min + ":" + trimStringFront(sec.toString(10), 2, "0"));
+}
+
+//***************************** ARRAY MANIPULATION ******************************//
+module.exports.randomize = function randomize(array) {
     var currentIndex = array.length, temporaryValue, randomIndex;
 
     // While there remain elements to shuffle...
@@ -50,7 +57,8 @@ function randomize(array) {
     return array;
 }
 
-function addLineToFile(filePath, data) {
+//****************************** FILE MANIPULATION ******************************//
+module.exports.addLineToFile = function addLineToFile(filePath, data) {
     var line = data + os.EOL;
     fs.writeFile(filePath, line, { flag: "a" },
         function (err) {
@@ -58,7 +66,7 @@ function addLineToFile(filePath, data) {
         });
 }
 
-function overrideFile(filePath, data) {
+module.exports.overrideFile = function overrideFile(filePath, data) {
     var line = data + os.EOL;
     fs.writeFile(filePath, line, { flag: "w" },
         function (err) {
@@ -66,61 +74,12 @@ function overrideFile(filePath, data) {
         });
 }
 
-function trimString(str, length, token) {
-    if (!token) {
-        token = " ";
-    }
-    if (str.length == length) {
-        return str;
-    }
-    if (str.length < length) {
-        while (str.length < length) {
-            str += token;
-        }
-        return str;
-    }
-    while (str.length > length) {
-        str = str.slice(0, -1);
-    }
-    return str;
-}
-
-function trimStringFront(str, length, token) {
-    if (!token) {
-        token = " ";
-    }
-    if (str.length == length) {
-        return str;
-    }
-    if (str.length < length) {
-        while (str.length < length) {
-            str = token + str;
-        }
-        return str;
-    }
-    while (str.length > length) {
-        str = str.slice(1);
-    }
-    return str;
-}
-
-function arrToString(arr, spacing, none) {
-    if (!none) none = "";
-    if (arr.length == 0) return none;
-    if (!spacing) spacing = " ";
-    str = arr[0];
-    for (let i = 1; i < arr.length; i++) {
-        str += spacing;
-        str += arr[i];
-    }
-    return str;
-}
-
-function rgbToHex(r, g, b) {
+//****************************** VALUE MANIPULATION ******************************//
+module.exports.rgbToHex = function rgbToHex(r, g, b) {
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
-function hexToRgb(hex) {
+module.exports.hexToRgb = function hexToRgb(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
     hex = hex.replace(shorthandRegex, function (m, r, g, b) {
@@ -135,26 +94,34 @@ function hexToRgb(hex) {
     } : null;
 }
 
-function secondsToTimeString(sec) {
-    var min = 0;
-    while (sec >= 60) {
-        min++;
-        sec -= 60;
-    }
-    return (min + ":" + trimStringFront(sec.toString(10), 2, "0"));
+//***************************** CONSOLE MANIPULATION *****************************//
+const red = '\x1b[31m'
+const orange = '\x1b[33m'
+const green = '\x1b[32m'
+const white = '\x1b[0m'
+
+function logInConsole(data, position, addInfo, title = "info", color = green) {
+    const cDate = new Date()
+    const titleEnd = centerString((title + " end").toUpperCase(), 60)
+    title = centerString(title.toUpperCase(), 60)
+    console.log(`\n${color}${title}${white}`)
+    console.log(`${trimString("[POSITION]", 15)}${position}`)
+    console.log(`${trimString("[TIME]", 15)}${cDate.toString()}`)
+    console.log(`${trimString("[DATA]", 15)}${data}`)
+    if (!(typeof addInfo === 'undefined')) console.log(`${trimString("[ADD. INFO]", 15)}${addInfo}`)
+    console.log(`\n${color}${titleEnd}${white}`)
 }
 
-module.exports =
-    {
-        logErr: logErr,
-        logUserError: logUserError,
-        randomize: randomize,
-        logInfo: logInfo,
-        trimString: trimString,
-        addLineToFile: addLineToFile,
-        overrideFile: overrideFile,
-        arrToString: arrToString,
-        rgbToHex: rgbToHex,
-        hexToRgb: hexToRgb,
-        secondsToTimeString: secondsToTimeString
-    }
+module.exports.logErr = function logErr(err, position, info) {
+    logInConsole(err, position, info, "error", red)
+}
+
+module.exports.logUserErr = function logUserErr(warn, position, user, info) {
+    let data = `User: ${user}`
+    if (!(typeof info === 'undefined')) data += `, Info: ${info}`
+    logInConsole(warn, position, data, "user error", orange)
+}
+
+module.exports.logInfo = function logInfo(info, position, addInfo) {
+    logInConsole(info, position, addInfo)
+}
